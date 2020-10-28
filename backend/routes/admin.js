@@ -1,43 +1,48 @@
-const path = require('path');
 const express = require('express');
 const router = express.Router();
 
 const Product = require('../model/product');
-const Cart = require('../model/cart');
-const { title } = require('process');
-
-router.get('/products', (req, res, next) => {
-	console.log(Product.fetchAll());
-	res.json(Product.fetchAll());
-});
 
 router.post('/add-product', (req, res, next) => {
 	const { title, image, price, description } = req.body;
-	const newProduct = new Product(title, image, description, price);
-	newProduct.save();
-	res.sendStatus(200);
+
+	const product = new Product(title, price, description, image, req.user._id);
+	product
+		.save()
+		.then((result) => {
+			console.log('created product!');
+			res.sendStatus(200);
+		})
+		.catch((err) => {
+			console.log(err);
+			res.sendStatus(400);
+		});
 });
 
 router.post('/edit-product', (req, res, next) => {
 	const { id, title, image, price, description } = req.body;
-	const existingProduct = Product.fetchId(id);
-	const prevPrice = existingProduct.editProduct(
-		title,
-		image,
-		description,
-		price
-	);
-	Cart.editPrice(id, prevPrice, existingProduct.price);
-	res.sendStatus(200);
+	Product.editById(id, title, price, description, image)
+		.then((result) => {
+			console.log('successful edit!');
+			res.sendStatus(200);
+		})
+		.catch((err) => {
+			console.log(err);
+			res.sendStatus(400);
+		});
 });
 
 router.post('/delete-product', (req, res, next) => {
-	const { id, price } = req.body;
-	Product.deleteId(id);
-	Cart.deleteProduct(id, price);
-	console.log(Product.fetchAll());
-	console.log(Cart.cart);
-	res.sendStatus(200);
+	const { id } = req.body;
+	Product.deleteById(id)
+		.then((result) => {
+			console.log('successful delete!');
+			res.sendStatus(200);
+		})
+		.catch((err) => {
+			console.log(err);
+			res.sendStatus(400);
+		});
 });
 
 module.exports = router;

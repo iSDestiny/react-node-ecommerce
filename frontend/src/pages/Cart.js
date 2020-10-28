@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useHistory } from 'react-router-dom';
 import axios from 'axios';
 import backendDomain from '../utility/backendDomain';
 import {
@@ -19,9 +20,9 @@ const useStyles = makeStyles((theme) => ({
 		margin: 'auto',
 		display: 'block',
 		maxWidth: '100%',
-		maxHeight: '100%',
-		height: '190px',
-		width: '180px',
+		maxHeight: '190px',
+		height: 'auto',
+		width: 'auto',
 	},
 	cartBody: {
 		width: '100%',
@@ -34,13 +35,14 @@ const Cart = (props) => {
 	const [cart, setCart] = useState();
 	const [idQty, setIdQty] = useState({});
 	const [totalPrice, setTotalPrice] = useState(0);
+	const history = useHistory();
 
 	useEffect(() => {
 		axios.get(backendDomain + '/shop/cart').then((res) => {
 			setIdQty((prev) => {
 				let newIdQty = { ...prev };
 				res.data.products.forEach((prod) => {
-					newIdQty[prod.productData.id] = prod.quantity;
+					newIdQty[prod._id] = prod.quantity;
 				});
 				return newIdQty;
 			});
@@ -49,23 +51,23 @@ const Cart = (props) => {
 		});
 	}, []);
 
-	const deleteHandler = (id, price) => {
+	const deleteHandler = (id) => {
 		axios
 			.post(backendDomain + '/shop/delete-cart-item', {
 				id: id,
-				price: price,
 			})
 			.then((res) => {
-				console.log(res);
+				console.log('SUCCESSFUL DELETE');
 				setCart(res.data);
 				setTotalPrice(res.data.totalPrice);
 				setIdQty((prev) => {
 					let newIdQty = { ...prev };
 					res.data.products.forEach((prod) => {
-						newIdQty[prod.productData.id] = prod.quantity;
+						newIdQty[prod._id] = prod.quantity;
 					});
 					return newIdQty;
 				});
+				console.log('SUCCESSFUL DELETE');
 			});
 	};
 
@@ -78,34 +80,45 @@ const Cart = (props) => {
 			});
 		}
 		if (event.target.value && parseInt(event.target.value) <= 0) {
-			deleteHandler(id, price);
-		} else if (event.target.value && !event.target.value.includes('.'))
+			deleteHandler(id);
+		} else if (event.target.value && !event.target.value.includes('.')) {
 			axios
 				.post(backendDomain + '/shop/edit-cart', {
 					id: id,
-					price: price,
 					quantity: event.target.value,
 				})
 				.then((res) => {
 					console.log(res);
 					setTotalPrice(res.data.totalPrice);
+					setCart(res.data);
 				});
+		}
+	};
+
+	const orderHandler = () => {
+		axios
+			.post(backendDomain + '/shop/create-order', {})
+			.then((res) => {
+				console.log(res);
+				history.push('/orders');
+			})
+			.catch((err) => {
+				console.log(err);
+			});
 	};
 
 	return (
 		<>
-			{cart && cart.products.length > 0 && (
-				<Typography variant="h5" style={{ textAlign: 'center' }}>
-					<strong>Total Price: ${totalPrice}</strong>
-				</Typography>
-			)}
 			<Grid container spacing={3} direction="column">
+				{cart && cart.products.length > 0 && (
+					<Typography variant="h5" style={{ textAlign: 'center' }}>
+						<strong>Total Price: ${totalPrice.toFixed(2)}</strong>
+					</Typography>
+				)}
 				{cart && cart.products.length > 0 ? (
 					cart.products.map((prod) => {
-						const { productData } = prod;
-
 						return (
-							<Grid item key={productData.id}>
+							<Grid item key={prod._id}>
 								<Grid
 									container
 									direction="row"
@@ -116,7 +129,7 @@ const Cart = (props) => {
 										<div className={classes.image}>
 											<img
 												className={classes.img}
-												src={productData.imageUrl}
+												src={prod.imageUrl}
 												alt="product image"
 											/>
 										</div>
@@ -129,37 +142,31 @@ const Cart = (props) => {
 										>
 											<Grid item xs={12}>
 												<Typography variant="h5">
-													{productData.title}
+													{prod.title}
 												</Typography>
 											</Grid>
 											<Grid item>
 												<TextField
 													label="Qty"
 													type="number"
-													value={
-														idQty[productData.id]
-													}
+													value={idQty[prod._id]}
 													style={{ width: '2rem' }}
 													onChange={(event) => {
 														handleQtyChange(
 															event,
-															productData.id,
-															productData.price
+															prod._id
 														);
 													}}
 												/>
 											</Grid>
 											<Grid item xs={2}>
 												<Button
-													variant="contained"
+													variant="outlined"
 													color="secondary"
 													onClick={() => {
-														deleteHandler(
-															productData.id,
-															productData.price
-														);
+														deleteHandler(prod._id);
 													}}
-													style={{ height: '100%' }}
+													style={{ height: '80%' }}
 												>
 													Delete
 												</Button>
@@ -169,9 +176,10 @@ const Cart = (props) => {
 									<Grid item style={{ marginLeft: 'auto' }}>
 										<Typography variant="h6">
 											<strong>
-												$
-												{productData.price *
-													idQty[productData.id]}
+												${' '}
+												{(
+													prod.quantity * prod.price
+												).toFixed(2)}
 											</strong>
 										</Typography>
 									</Grid>
@@ -185,6 +193,20 @@ const Cart = (props) => {
 						No products in the cart!
 					</Typography>
 				)}
+				<Grid
+					item
+					container
+					justify="center"
+					style={{ marginTop: '5%' }}
+				>
+					<Button
+						variant="contained"
+						color="primary"
+						onClick={orderHandler}
+					>
+						Place Order
+					</Button>
+				</Grid>
 			</Grid>
 		</>
 	);

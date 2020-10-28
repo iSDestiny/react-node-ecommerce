@@ -34,7 +34,11 @@ const Product = (props) => {
 					</Grid>
 					<hr style={{ width: '100%' }} />
 					<Grid item>
-						<img src={product.imageUrl} alt="product image" />
+						<img
+							style={{ height: '20rem', width: 'auto' }}
+							src={product.imageUrl}
+							alt="product image"
+						/>
 					</Grid>
 					<Grid item>
 						<Typography variant="h5">${product.price}</Typography>

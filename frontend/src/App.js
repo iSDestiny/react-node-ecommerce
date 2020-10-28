@@ -7,6 +7,7 @@ import AddProduct from './pages/AddProduct';
 import Shop from './pages/Shop';
 import Product from './pages/Product';
 import Cart from './pages/Cart';
+import Orders from './pages/Orders';
 
 function App() {
 	const [products, setProducts] = useState([]);
@@ -45,6 +46,9 @@ function App() {
 					<Route path="/cart">
 						<Cart />
 					</Route>
+					<Router path="/orders">
+						<Orders />
+					</Router>
 					<Route path="/add-product">
 						<AddProduct />
 					</Route>

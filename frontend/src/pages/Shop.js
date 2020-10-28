@@ -29,12 +29,11 @@ const Shop = (props) => {
 		axios
 			.post(backendDomain + '/admin/delete-product', {
 				id: id,
-				price: price,
 			})
 			.then((res) => {
 				console.log(res);
 				props.setProducts((prev) => {
-					return prev.filter((prod) => prod.id !== id);
+					return prev.filter((prod) => prod._id !== id);
 				});
 			});
 	};
@@ -51,7 +50,7 @@ const Shop = (props) => {
 									color="primary"
 									variant="outlined"
 									onClick={(event) => {
-										addToCartHandler(item.id, item.price);
+										addToCartHandler(item._id, item.price);
 									}}
 									style={{ marginTop: '1rem' }}
 								>
@@ -65,7 +64,7 @@ const Shop = (props) => {
 									color="primary"
 									variant="outlined"
 									component={Link}
-									to={`/products/${item.id}`}
+									to={`/products/${item._id}`}
 									style={{
 										marginTop: '1rem',
 										marginLeft: '0.5rem',
@@ -82,7 +81,7 @@ const Shop = (props) => {
 										color="primary"
 										variant="outlined"
 										component={Link}
-										to={`/edit-product/${item.id}`}
+										to={`/edit-product/${item._id}`}
 										style={{
 											marginTop: '1rem',
 											marginLeft: '0.5rem',
@@ -94,7 +93,7 @@ const Shop = (props) => {
 										color="primary"
 										variant="outlined"
 										onClick={() => {
-											deleteHandler(item.id, item.price);
+											deleteHandler(item._id, item.price);
 										}}
 										style={{
 											marginTop: '1rem',
@@ -108,8 +107,9 @@ const Shop = (props) => {
 					}
 
 					return (
-						<Grid item xs={12} md={6} key={item.id}>
+						<Grid item xs={12} md={6} key={item._id}>
 							<Paper
+								elevation={2}
 								style={{ padding: '10px', textAlign: 'center' }}
 							>
 								<Typography
@@ -121,7 +121,7 @@ const Shop = (props) => {
 								<img
 									src={item.imageUrl}
 									alt="Image of the product"
-									style={{ width: '100%' }}
+									style={{ width: '75%%', height: '250px' }}
 								/>
 								<Typography variant="h5">
 									${item.price}

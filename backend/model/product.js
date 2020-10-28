@@ -1,39 +1,70 @@
-let products = [];
+const getDb = require('../utility/database').getDb;
+const mongo = require('mongodb');
 
 class Product {
-	constructor(title, imageUrl, description, price) {
+	constructor(title, price, description, imageUrl, userId) {
 		this.title = title;
-		this.imageUrl = imageUrl;
+		this.price = parseFloat(price);
 		this.description = description;
-		this.price = price;
-		this.id = Math.random().toString();
+		this.imageUrl = imageUrl;
+		this.userId = userId;
 	}
 
 	save() {
-		products.push(this);
+		const db = getDb();
+		return db
+			.collection('products')
+			.insertOne(this)
+			.then((res) => {
+				console.log(res);
+			})
+			.catch((err) => {
+				console.log(err);
+			});
+	}
+
+	static findById(prodId) {
+		prodId = new mongo.ObjectID(prodId);
+		const db = getDb();
+		const query = { _id: prodId };
+		return db.collection('products').findOne(query);
 	}
 
 	static fetchAll() {
-		return products;
+		return getDb()
+			.collection('products')
+			.find()
+			.toArray()
+			.then((products) => {
+				console.log(products);
+				return products;
+			})
+			.catch((err) => {
+				console.log(err);
+			});
 	}
 
-	static fetchId(id) {
-		return products.find((prod) => {
-			return prod.id === id;
-		});
+	static deleteById(prodId) {
+		prodId = new mongo.ObjectID(prodId);
+		const collection = getDb().collection('products');
+		const query = { _id: prodId };
+		return collection.deleteOne(query);
 	}
 
-	static deleteId(id) {
-		products = products.filter((prod) => id !== prod.id);
-	}
-
-	editProduct(title, imageUrl, description, price) {
-		this.title = title;
-		this.imageUrl = imageUrl;
-		this.description = description;
-		const prevPrice = this.price;
-		this.price = price;
-		return prevPrice;
+	static editById(prodId, title, price, description, imageUrl) {
+		prodId = new mongo.ObjectID(prodId);
+		const collection = getDb().collection('products');
+		const filter = { _id: prodId };
+		const options = { upsert: true };
+		const updateDoc = {
+			$set: {
+				title: title,
+				price: price,
+				description: description,
+				imageUrl: imageUrl,
+			},
+		};
+		return collection.updateOne(filter, updateDoc, options);
 	}
 }
 
