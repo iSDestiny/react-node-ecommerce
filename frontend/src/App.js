@@ -8,6 +8,7 @@ import Shop from './pages/Shop';
 import Product from './pages/Product';
 import Cart from './pages/Cart';
 import Orders from './pages/Orders';
+import Login from './pages/Login';
 
 function App() {
 	const [products, setProducts] = useState([]);
@@ -61,6 +62,9 @@ function App() {
 					</Route>
 					<Route path="/edit-product/:id">
 						<AddProduct edit />
+					</Route>
+					<Route path="/login">
+						<Login />
 					</Route>
 				</Switch>
 			</Container>

@@ -41,7 +41,10 @@ const Orders = (props) => {
 							direction="column"
 						>
 							<Typography variant="h5">
-								Order Total: ${order.totalPrice}
+								Order # {order._id}
+							</Typography>
+							<Typography variant="h6">
+								Total Price: ${order.totalPrice}
 							</Typography>
 							{productDisplay}
 						</Grid>

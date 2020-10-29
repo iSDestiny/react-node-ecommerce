@@ -109,19 +109,21 @@ const Cart = (props) => {
 
 	return (
 		<>
-			<Grid container spacing={3} direction="column">
+			<Grid container spacing={5} justify="center" direction="row">
 				{cart && cart.products.length > 0 && (
-					<Typography variant="h5" style={{ textAlign: 'center' }}>
-						<strong>Total Price: ${totalPrice.toFixed(2)}</strong>
-					</Typography>
+					<Grid item>
+						<Typography variant="h5" >
+							<strong>Total Price: ${totalPrice.toFixed(2)}</strong>
+						</Typography>
+					</Grid>
 				)}
 				{cart && cart.products.length > 0 ? (
 					cart.products.map((prod) => {
 						return (
-							<Grid item key={prod._id}>
+							<Grid item key={prod._id} xs={12}>
 								<Grid
-									container
-									direction="row"
+									 container
+									 direction="row"
 									spacing={2}
 									style={{ marginBottom: '1rem' }}
 								>
@@ -197,7 +199,7 @@ const Cart = (props) => {
 					item
 					container
 					justify="center"
-					style={{ marginTop: '5%' }}
+					style={{ marginTop: '1%' }}
 				>
 					<Button
 						variant="contained"
