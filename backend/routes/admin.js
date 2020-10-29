@@ -6,7 +6,7 @@ const Product = require('../model/product');
 router.post('/add-product', (req, res, next) => {
 	const { title, image, price, description } = req.body;
 
-	const product = new Product(title, price, description, image, req.user._id);
+	const product = new Product({title: title, imageUrl: image, price: price, description: description, userId: req.user});
 	product
 		.save()
 		.then((result) => {
@@ -21,7 +21,7 @@ router.post('/add-product', (req, res, next) => {
 
 router.post('/edit-product', (req, res, next) => {
 	const { id, title, image, price, description } = req.body;
-	Product.editById(id, title, price, description, image)
+	Product.findByIdAndUpdate(id, {$set: {title: title, imageUrl: image, price: price, description: description}})
 		.then((result) => {
 			console.log('successful edit!');
 			res.sendStatus(200);
@@ -34,7 +34,7 @@ router.post('/edit-product', (req, res, next) => {
 
 router.post('/delete-product', (req, res, next) => {
 	const { id } = req.body;
-	Product.deleteById(id)
+	Product.findByIdAndRemove(id)
 		.then((result) => {
 			console.log('successful delete!');
 			res.sendStatus(200);

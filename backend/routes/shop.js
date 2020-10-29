@@ -2,9 +2,10 @@ const express = require('express');
 const router = express.Router();
 
 const Product = require('../model/product');
+const Order = require('../model/orders');
 
 router.get('/products', (req, res, next) => {
-	Product.fetchAll()
+	Product.find({}).exec()
 		.then((products) => {
 			res.json(products);
 		})
@@ -31,7 +32,6 @@ router.get('/cart', (req, res, next) => {
 	req.user
 		.getCart()
 		.then((cart) => {
-			console.log(cart);
 			res.json(cart);
 		})
 		.catch((err) => {
@@ -80,8 +80,7 @@ router.post('/delete-cart-item', async (req, res, next) => {
 });
 
 router.get('/orders', (req, res, next) => {
-	req.user
-		.getOrders()
+	Order.find({'user._id': req.user._id}).exec()
 		.then((orders) => {
 			res.json(orders);
 		})
@@ -91,11 +90,14 @@ router.get('/orders', (req, res, next) => {
 		});
 });
 
-router.post('/create-order', (req, res, next) => {
-	req.user
-		.addOrder()
+router.post('/create-order', async (req, res, next) => {
+	const cart = await req.user.getCart();
+	const order = new Order({products: [...cart.products], totalPrice: cart.totalPrice, user: {name: req.user.name, _id: req.user}});
+	await order.save();
+	req.user.cart = {items: []};
+	req.user.save()
 		.then(() => {
-			console.log('added order');
+			console.log('added order and cleared cart!');
 			res.sendStatus(200);
 		})
 		.catch((err) => {

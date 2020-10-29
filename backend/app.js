@@ -3,7 +3,8 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const app = express();
 
-const mongoConnect = require('./utility/database').mongoConnect;
+// const mongoConnect = require('./utility/database').mongoConnect;
+const mongoose = require('mongoose');
 
 const shopRoute = require('./routes/shop');
 const adminRoute = require('./routes/admin');
@@ -15,9 +16,9 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
 app.use((req, res, next) => {
-	User.findById('5f98cbf855c2cb4d4a5d6ab6')
+	User.findById('5f9a147be369be44d0cc17c4')
 		.then((user) => {
-			req.user = new User(user.name, user.email, user.cart, user._id);
+			req.user = user;
 			console.log(user);
 			next();
 		})
@@ -32,6 +33,9 @@ app.get('/', (req, res, next) => {
 	res.send('testbase');
 });
 
-mongoConnect(() => {
+mongoose.connect('mongodb+srv://jason:matkim525@cluster0.q46pp.mongodb.net/node-course?retryWrites=true&w=majority').then(result => {
+	// console.log(result)
 	app.listen(8080);
-});
+}).catch(err => {
+	console.log(err);
+})
