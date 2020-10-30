@@ -2,11 +2,14 @@ const express = require('express');
 const router = express.Router();
 
 const Product = require('../model/product');
+const User = require('../model/user');
 const Order = require('../model/orders');
 
 router.get('/products', (req, res, next) => {
-	Product.find({}).exec()
+	Product.find({})
+		.exec()
 		.then((products) => {
+			console.log(products);
 			res.json(products);
 		})
 		.catch((err) => {
@@ -28,7 +31,7 @@ router.get('/products/:productId', (req, res, next) => {
 		});
 });
 
-router.get('/cart', (req, res, next) => {
+router.get('/cart', async (req, res, next) => {
 	req.user
 		.getCart()
 		.then((cart) => {
@@ -70,6 +73,7 @@ router.post('/edit-cart', async (req, res, next) => {
 router.post('/delete-cart-item', async (req, res, next) => {
 	try {
 		const { id } = req.body;
+		// const user = await User.findById(req.session.user._id);
 		await req.user.deleteCartProductById(id);
 		const cart = await req.user.getCart();
 		res.json(cart);
@@ -80,7 +84,8 @@ router.post('/delete-cart-item', async (req, res, next) => {
 });
 
 router.get('/orders', (req, res, next) => {
-	Order.find({'user._id': req.user._id}).exec()
+	Order.find({ 'user._id': req.session.user._id })
+		.exec()
 		.then((orders) => {
 			res.json(orders);
 		})
@@ -92,10 +97,14 @@ router.get('/orders', (req, res, next) => {
 
 router.post('/create-order', async (req, res, next) => {
 	const cart = await req.user.getCart();
-	const order = new Order({products: [...cart.products], totalPrice: cart.totalPrice, user: {name: req.user.name, _id: req.user}});
+	const order = new Order({
+		products: [...cart.products],
+		totalPrice: cart.totalPrice,
+		user: { name: req.session.user.name, _id: req.session.user }
+	});
 	await order.save();
-	req.user.cart = {items: []};
-	req.user.save()
+	user.cart = { items: [] };
+	user.save()
 		.then(() => {
 			console.log('added order and cleared cart!');
 			res.sendStatus(200);

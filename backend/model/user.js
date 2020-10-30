@@ -4,66 +4,80 @@ const Schema = mongoose.Schema;
 // const getDb = require('../utility/database').getDb;
 
 const userSchema = new Schema({
-	name: {
+	email: {
 		type: String,
 		require: true
 	},
-	email: {
+	password: {
 		type: String,
 		require: true
 	},
 	cart: {
 		items: [
 			{
-				_id: {type: Schema.Types.ObjectId, required: true, ref: 'Product'}, 
-				quantity: {type: Number, required: true}
+				_id: {
+					type: Schema.Types.ObjectId,
+					required: true,
+					ref: 'Product'
+				},
+				quantity: { type: Number, required: true }
 			}
 		]
 	}
 });
 
-userSchema.methods.addToCart = function(product) {
-		const cartProductIndex = this.cart.items.findIndex((cp) => {
-			return cp._id.toString() === product._id.toString();
+userSchema.methods.addToCart = function (product) {
+	const cartProductIndex = this.cart.items.findIndex((cp) => {
+		return cp._id.toString() === product._id.toString();
+	});
+
+	if (cartProductIndex >= 0) {
+		this.cart.items[cartProductIndex].quantity += 1;
+	} else {
+		this.cart.items.push({
+			_id: product._id,
+			quantity: 1
 		});
+	}
+	return this.save();
+};
 
-		if (cartProductIndex >= 0) {
-			this.cart.items[cartProductIndex].quantity += 1;
-		} else {
-			this.cart.items.push({
-				_id: product._id,
-				quantity: 1,
-			});
-		}
-		return this.save();
-}
-
-userSchema.methods.getCart = function() {
-		return this.populate('cart.items._id')
+userSchema.methods.getCart = function () {
+	return this.populate('cart.items._id')
 		.execPopulate()
 		.then((user) => {
 			let products = user.cart.items;
-			let totalPrice = 0
-			products = products.map(product => {
+			let totalPrice = 0;
+			products = products.map((product) => {
 				totalPrice += product._id.price * product.quantity;
 				const productData = product._id;
-				return {_id: productData._id, title: productData.title, imageUrl: productData.imageUrl, price: productData.price, description: productData.description, quantity: product.quantity};
-			})
-			return {products: products, totalPrice: totalPrice};
-		}
-		)
-}
+				return {
+					_id: productData._id,
+					title: productData.title,
+					imageUrl: productData.imageUrl,
+					price: productData.price,
+					description: productData.description,
+					quantity: product.quantity
+				};
+			});
+			return { products: products, totalPrice: totalPrice };
+		});
+};
 
-userSchema.methods.editCartProductQuantityById = function(id, quantity) {
-	const index = this.cart.items.findIndex(cp => cp._id.toString() === id.toString());
+userSchema.methods.editCartProductQuantityById = function (id, quantity) {
+	const index = this.cart.items.findIndex(
+		(cp) => cp._id.toString() === id.toString()
+	);
 	this.cart.items[index].quantity = quantity;
 	return this.save();
-}
+};
 
-userSchema.methods.deleteCartProductById = function(id) {
-	this.cart.items = this.cart.items.filter(cp => cp._id.toString() !== id.toString());
+userSchema.methods.deleteCartProductById = function (id) {
+	this.cart.items = this.cart.items.filter(
+		(cp) => cp._id.toString() !== id.toString()
+	);
 	return this.save();
-}
+};
 
 module.exports = mongoose.model('User', userSchema);
 

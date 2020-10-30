@@ -29,7 +29,6 @@ const productSchema = new Schema({
 
 module.exports = mongoose.model('Product', productSchema);
 
-
 // class Product {
 // 	constructor(title, price, description, imageUrl, userId) {
 // 		this.title = title;
@@ -96,4 +95,3 @@ module.exports = mongoose.model('Product', productSchema);
 // 		return collection.updateOne(filter, updateDoc, options);
 // 	}
 // }
-
