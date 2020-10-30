@@ -1,5 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Switch, Route } from 'react-router-dom';
+import {
+	BrowserRouter as Router,
+	Switch,
+	Route,
+	useLocation
+} from 'react-router-dom';
 import axios from 'axios';
 import NavBar from './components/NavBar';
 import { Container, Grid } from '@material-ui/core';
@@ -9,10 +14,12 @@ import Product from './pages/Product';
 import Cart from './pages/Cart';
 import Orders from './pages/Orders';
 import Login from './pages/Login';
+import SignUp from './pages/SignUp';
+import backendDomain from './utility/backendDomain';
 
-function App() {
+const App = () => {
+	const [isAuthenticated, setIsAuthenticated] = useState(false);
 	const [products, setProducts] = useState([]);
-
 	const selectTab = (tab) => {
 		switch (tab) {
 			case 0:
@@ -24,11 +31,15 @@ function App() {
 
 	return (
 		<Router>
-			<NavBar />
+			<NavBar
+				isAuthenticated={isAuthenticated}
+				setIsAuthenticated={setIsAuthenticated}
+			/>
 			<Container maxWidth="lg" style={{ paddingTop: '50px' }}>
 				<Switch>
 					<Route exact path="/">
 						<Shop
+							isAuthenticated={isAuthenticated}
 							pageType={0}
 							products={products}
 							setProducts={setProducts}
@@ -42,7 +53,7 @@ function App() {
 						/>
 					</Route>
 					<Route path="/products/:id">
-						<Product />
+						<Product isAuthenticated={isAuthenticated} />
 					</Route>
 					<Route path="/cart">
 						<Cart />
@@ -66,10 +77,13 @@ function App() {
 					<Route path="/login">
 						<Login />
 					</Route>
+					<Route path="/signup">
+						<SignUp />
+					</Route>
 				</Switch>
 			</Container>
 		</Router>
 	);
-}
+};
 
 export default App;

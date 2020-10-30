@@ -9,16 +9,20 @@ const Product = (props) => {
 	const history = useHistory();
 	const [product, setProduct] = useState();
 	useEffect(() => {
-		axios.get(backendDomain + `/shop/products/${id}`).then((res) => {
-			console.log(res.data);
-			setProduct(res.data);
-		});
+		axios
+			.get(backendDomain + `/shop/products/${id}`, {
+				withCredentials: true
+			})
+			.then((res) => {
+				console.log(res.data);
+				setProduct(res.data);
+			});
 	}, []);
 	const addToCartHandler = () => {
 		axios
 			.post(backendDomain + '/shop/add-to-cart', {
 				id: id,
-				price: product.price,
+				price: product.price
 			})
 			.then((res) => {
 				console.log(res);
@@ -49,14 +53,16 @@ const Product = (props) => {
 						</Typography>
 					</Grid>
 					<Grid item>
-						<Button
-							color="primary"
-							variant="outlined"
-							onClick={addToCartHandler}
-							style={{ marginTop: '1rem' }}
-						>
-							Add to Cart
-						</Button>
+						{props.isAuthenticated && (
+							<Button
+								color="primary"
+								variant="outlined"
+								onClick={addToCartHandler}
+								style={{ marginTop: '1rem' }}
+							>
+								Add to Cart
+							</Button>
+						)}
 					</Grid>
 				</>
 			)}

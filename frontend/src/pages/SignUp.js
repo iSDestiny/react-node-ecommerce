@@ -11,20 +11,22 @@ const useStyles = makeStyles({
 	}
 });
 
-const Login = () => {
+const SignUp = () => {
 	const classes = useStyles();
 	const [email, setEmail] = useState('');
 	const [password, setPassword] = useState('');
+	const [confirmPassword, setConfirmPassword] = useState('');
 	const history = useHistory();
 
 	const submitHandler = (event) => {
 		event.preventDefault();
 		axios
 			.post(
-				backendDomain + '/auth/login',
+				backendDomain + '/auth/signup',
 				{
 					email: email,
-					password: password
+					password: password,
+					confirmPassword: confirmPassword
 				},
 				{
 					headers: { 'Content-Type': 'application/json' },
@@ -33,16 +35,11 @@ const Login = () => {
 			)
 			.then((res) => {
 				console.log(res);
-				if (res.data.success) {
-					console.log('login success');
-					history.push('/');
-				} else {
-					console.log('login failure, info did not match');
-				}
+				history.push('/login');
 			})
 			.catch((err) => {
 				console.log(err);
-				console.log('failed to login');
+				console.log('Failed to sign up');
 			});
 	};
 
@@ -69,13 +66,25 @@ const Login = () => {
 					/>
 				</Grid>
 				<Grid item className={classes.rootInput}>
+					<TextField
+						variant="outlined"
+						label="Confirm Password"
+						value={confirmPassword}
+						type="password"
+						onChange={(event) =>
+							setConfirmPassword(event.target.value)
+						}
+						fullWidth
+					/>
+				</Grid>
+				<Grid item className={classes.rootInput}>
 					<Button
 						type="submit"
 						variant="contained"
 						color="primary"
 						fullWidth
 					>
-						Login
+						Sign Up
 					</Button>
 				</Grid>
 			</Grid>
@@ -83,4 +92,4 @@ const Login = () => {
 	);
 };
 
-export default Login;
+export default SignUp;

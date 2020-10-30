@@ -8,18 +8,21 @@ const Shop = (props) => {
 	const history = useHistory();
 
 	useEffect(() => {
-		axios.get(backendDomain + '/shop/products').then((res) => {
-			console.log(res.data);
-			props.setProducts(res.data);
-		});
+		axios
+			.get(backendDomain + '/shop/products', { withCredentials: true })
+			.then((res) => {
+				console.log(res.data);
+				props.setProducts(res.data);
+			});
 	}, []);
 
 	const addToCartHandler = (id, price) => {
 		axios
-			.post(backendDomain + '/shop/add-to-cart', {
-				id: id,
-				price: price,
-			})
+			.post(
+				backendDomain + '/shop/add-to-cart',
+				{ id: id, price: price },
+				{ withCredentials: true }
+			)
 			.then((res) => {
 				console.log(res);
 			});
@@ -27,9 +30,11 @@ const Shop = (props) => {
 
 	const deleteHandler = (id, price) => {
 		axios
-			.post(backendDomain + '/admin/delete-product', {
-				id: id,
-			})
+			.post(
+				backendDomain + '/admin/delete-product',
+				{ id: id },
+				{ withCredentials: true }
+			)
 			.then((res) => {
 				console.log(res);
 				props.setProducts((prev) => {
@@ -45,7 +50,7 @@ const Shop = (props) => {
 
 					switch (props.pageType) {
 						case 0:
-							buttons = (
+							buttons = props.isAuthenticated && (
 								<Button
 									color="primary"
 									variant="outlined"
@@ -67,7 +72,7 @@ const Shop = (props) => {
 									to={`/products/${item._id}`}
 									style={{
 										marginTop: '1rem',
-										marginLeft: '0.5rem',
+										marginLeft: '0.5rem'
 									}}
 								>
 									Details
@@ -84,7 +89,7 @@ const Shop = (props) => {
 										to={`/edit-product/${item._id}`}
 										style={{
 											marginTop: '1rem',
-											marginLeft: '0.5rem',
+											marginLeft: '0.5rem'
 										}}
 									>
 										Edit
@@ -97,7 +102,7 @@ const Shop = (props) => {
 										}}
 										style={{
 											marginTop: '1rem',
-											marginLeft: '0.5rem',
+											marginLeft: '0.5rem'
 										}}
 									>
 										Delete

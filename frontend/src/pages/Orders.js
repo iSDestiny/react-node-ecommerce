@@ -8,7 +8,7 @@ const Orders = (props) => {
 
 	useEffect(() => {
 		axios
-			.get(backendDomain + '/shop/orders')
+			.get(backendDomain + '/shop/orders', { withCredentials: true })
 			.then((res) => {
 				console.log(res.data);
 				setOrders(res.data);
