@@ -20,10 +20,15 @@ const Product = (props) => {
 	}, []);
 	const addToCartHandler = () => {
 		axios
-			.post(backendDomain + '/shop/add-to-cart', {
-				id: id,
-				price: product.price
-			})
+			.post(
+				backendDomain + '/shop/add-to-cart',
+				{
+					_csrf: props.csrfToken,
+					id: id,
+					price: product.price
+				},
+				{ withCredentials: true }
+			)
 			.then((res) => {
 				console.log(res);
 			});

@@ -8,8 +8,10 @@ const Shop = (props) => {
 	const history = useHistory();
 
 	useEffect(() => {
+		const route =
+			props.pageType === 2 ? '/shop/admin-products' : '/shop/products';
 		axios
-			.get(backendDomain + '/shop/products', { withCredentials: true })
+			.get(backendDomain + route, { withCredentials: true })
 			.then((res) => {
 				console.log(res.data);
 				props.setProducts(res.data);
@@ -20,7 +22,7 @@ const Shop = (props) => {
 		axios
 			.post(
 				backendDomain + '/shop/add-to-cart',
-				{ id: id, price: price },
+				{ id: id, _csrf: props.csrfToken },
 				{ withCredentials: true }
 			)
 			.then((res) => {
@@ -32,7 +34,7 @@ const Shop = (props) => {
 		axios
 			.post(
 				backendDomain + '/admin/delete-product',
-				{ id: id },
+				{ id: id, _csrf: props.csrfToken },
 				{ withCredentials: true }
 			)
 			.then((res) => {

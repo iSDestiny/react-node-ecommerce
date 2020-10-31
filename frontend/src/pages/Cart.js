@@ -57,7 +57,7 @@ const Cart = (props) => {
 		axios
 			.post(
 				backendDomain + '/shop/delete-cart-item',
-				{ id: id },
+				{ id: id, _csrf: props.csrfToken },
 				{ withCredentials: true }
 			)
 			.then((res) => {
@@ -91,7 +91,8 @@ const Cart = (props) => {
 					backendDomain + '/shop/edit-cart',
 					{
 						id: id,
-						quantity: event.target.value
+						quantity: event.target.value,
+						_csrf: props.csrfToken
 					},
 					{ withCredentials: true }
 				)
@@ -107,7 +108,7 @@ const Cart = (props) => {
 		axios
 			.post(
 				backendDomain + '/shop/create-order',
-				{},
+				{ _csrf: props.csrfToken },
 				{ withCredentials: true }
 			)
 			.then((res) => {

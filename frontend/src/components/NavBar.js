@@ -16,7 +16,7 @@ const NavBar = (props) => {
 		'/signup'
 	];
 
-	const { isAuthenticated, setIsAuthenticated } = props;
+	const { isAuthenticated, setIsAuthenticated, setFetchDone } = props;
 	const location = useLocation();
 
 	useEffect(() => {
@@ -26,9 +26,9 @@ const NavBar = (props) => {
 			})
 			.then((res) => {
 				console.log('authentication!!');
-				console.log(res.data);
 				console.log(res.data.isAuthenticated);
 				setIsAuthenticated(res.data.isAuthenticated);
+				setFetchDone(true);
 			})
 			.catch((err) => {
 				console.log('failed to get authentication');
@@ -37,7 +37,11 @@ const NavBar = (props) => {
 
 	const logoutHandler = () => {
 		axios
-			.post(backendDomain + '/auth/logout', {}, { withCredentials: true })
+			.post(
+				backendDomain + '/auth/logout',
+				{ _csrf: props.csrfToken },
+				{ withCredentials: true }
+			)
 			.then((res) => {
 				console.log('logout success!!');
 				setIsAuthenticated(false);

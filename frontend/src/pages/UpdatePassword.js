@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Grid, TextField, Button } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import { useHistory, Link } from 'react-router-dom';
+import { useHistory, useParams } from 'react-router-dom';
 import axios from 'axios';
 import backendDomain from '../utility/backendDomain';
 import ValidationErrorMessage from '../UI/ValidationErrorMessage';
@@ -12,22 +12,42 @@ const useStyles = makeStyles({
 	}
 });
 
-const Login = (props) => {
+const UpdatePassword = (props) => {
 	const classes = useStyles();
-	const [email, setEmail] = useState('');
+	const [loading, setLoading] = useState(true);
+	const [userId, setUserId] = useState('');
 	const [password, setPassword] = useState('');
+	const [confirmPassword, setConfirmPassword] = useState('');
 	const [failed, setFailed] = useState(false);
 	const history = useHistory();
+	const { token } = useParams();
+
+	useEffect(() => {
+		axios
+			.get(backendDomain + `/auth/reset/${token}`, {
+				withCredentials: true
+			})
+			.then((res) => {
+				const { userId, success } = res.data;
+				if (success) {
+					setUserId(userId);
+				} else {
+					history.push('/404');
+				}
+				setLoading(false);
+			});
+	}, []);
 
 	const submitHandler = (event) => {
 		event.preventDefault();
 		axios
 			.post(
-				backendDomain + '/auth/login',
+				backendDomain + '/auth/new-password',
 				{
-					email: email,
 					password: password,
-					_csrf: props.csrfToken
+					_csrf: props.csrfToken,
+					token: token,
+					id: userId
 				},
 				{
 					headers: { 'Content-Type': 'application/json' },
@@ -37,10 +57,10 @@ const Login = (props) => {
 			.then((res) => {
 				console.log(res);
 				if (res.data.success) {
-					console.log('login success');
-					history.push('/');
+					console.log('password update successful!');
+					history.push('/login');
 				} else {
-					console.log('login failure, info did not match');
+					console.log('password update failed, token expired');
 					setFailed(true);
 				}
 			})
@@ -54,7 +74,7 @@ const Login = (props) => {
 		<>
 			{failed && (
 				<ValidationErrorMessage>
-					Invalid email or password
+					Password update failed, token expired
 				</ValidationErrorMessage>
 			)}
 			<form onSubmit={submitHandler}>
@@ -67,21 +87,24 @@ const Login = (props) => {
 					<Grid item className={classes.rootInput}>
 						<TextField
 							variant="outlined"
-							label="Email"
-							value={email}
-							onChange={(event) => setEmail(event.target.value)}
+							label="Password"
+							type="password"
+							value={password}
+							onChange={(event) =>
+								setPassword(event.target.value)
+							}
 							fullWidth
 						/>
 					</Grid>
 					<Grid item className={classes.rootInput}>
 						<TextField
 							variant="outlined"
-							label="Password"
-							value={password}
-							onChange={(event) =>
-								setPassword(event.target.value)
-							}
 							type="password"
+							label="Confirm Password"
+							value={confirmPassword}
+							onChange={(event) =>
+								setConfirmPassword(event.target.value)
+							}
 							fullWidth
 						/>
 					</Grid>
@@ -92,11 +115,8 @@ const Login = (props) => {
 							color="primary"
 							fullWidth
 						>
-							Login
+							Update Password
 						</Button>
-					</Grid>
-					<Grid item>
-						<Link to="/reset">Reset Password</Link>
 					</Grid>
 				</Grid>
 			</form>
@@ -104,4 +124,4 @@ const Login = (props) => {
 	);
 };
 
-export default Login;
+export default UpdatePassword;

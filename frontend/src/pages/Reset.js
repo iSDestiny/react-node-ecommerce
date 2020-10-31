@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { Grid, TextField, Button } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import { useHistory, Link } from 'react-router-dom';
+import { useHistory } from 'react-router-dom';
 import axios from 'axios';
 import backendDomain from '../utility/backendDomain';
 import ValidationErrorMessage from '../UI/ValidationErrorMessage';
+import SuccessMessage from '../UI/SuccessMessage';
 
 const useStyles = makeStyles({
 	rootInput: {
@@ -12,21 +13,20 @@ const useStyles = makeStyles({
 	}
 });
 
-const Login = (props) => {
+const Reset = (props) => {
 	const classes = useStyles();
 	const [email, setEmail] = useState('');
-	const [password, setPassword] = useState('');
 	const [failed, setFailed] = useState(false);
-	const history = useHistory();
+	const [success, setSuccess] = useState(false);
+	// const history = useHistory();
 
 	const submitHandler = (event) => {
 		event.preventDefault();
 		axios
 			.post(
-				backendDomain + '/auth/login',
+				backendDomain + '/auth/reset',
 				{
 					email: email,
-					password: password,
 					_csrf: props.csrfToken
 				},
 				{
@@ -37,11 +37,13 @@ const Login = (props) => {
 			.then((res) => {
 				console.log(res);
 				if (res.data.success) {
-					console.log('login success');
-					history.push('/');
+					console.log('sent reset email');
+					setSuccess(true);
+					setFailed(false);
 				} else {
-					console.log('login failure, info did not match');
+					console.log('reset failed, email did not match');
 					setFailed(true);
+					setSuccess(false);
 				}
 			})
 			.catch((err) => {
@@ -54,8 +56,13 @@ const Login = (props) => {
 		<>
 			{failed && (
 				<ValidationErrorMessage>
-					Invalid email or password
+					Email does not exist
 				</ValidationErrorMessage>
+			)}
+			{success && (
+				<SuccessMessage>
+					Password reset email sent! Please check your email
+				</SuccessMessage>
 			)}
 			<form onSubmit={submitHandler}>
 				<Grid
@@ -74,29 +81,14 @@ const Login = (props) => {
 						/>
 					</Grid>
 					<Grid item className={classes.rootInput}>
-						<TextField
-							variant="outlined"
-							label="Password"
-							value={password}
-							onChange={(event) =>
-								setPassword(event.target.value)
-							}
-							type="password"
-							fullWidth
-						/>
-					</Grid>
-					<Grid item className={classes.rootInput}>
 						<Button
 							type="submit"
 							variant="contained"
 							color="primary"
 							fullWidth
 						>
-							Login
+							Send Reset Request
 						</Button>
-					</Grid>
-					<Grid item>
-						<Link to="/reset">Reset Password</Link>
 					</Grid>
 				</Grid>
 			</form>
@@ -104,4 +96,4 @@ const Login = (props) => {
 	);
 };
 
-export default Login;
+export default Reset;
