@@ -18,6 +18,19 @@ router.get('/products', (req, res, next) => {
 		});
 });
 
+router.get('/admin-products', (req, res, next) => {
+	Product.find({ userId: req.user._id })
+		.exec()
+		.then((products) => {
+			console.log(products);
+			res.json(products);
+		})
+		.catch((err) => {
+			console.log(err);
+			res.sendStatus(400);
+		});
+});
+
 router.get('/products/:productId', (req, res, next) => {
 	const id = req.params.productId;
 	Product.findById(id)
@@ -100,11 +113,12 @@ router.post('/create-order', async (req, res, next) => {
 	const order = new Order({
 		products: [...cart.products],
 		totalPrice: cart.totalPrice,
-		user: { name: req.session.user.name, _id: req.session.user }
+		user: { _id: req.session.user }
 	});
 	await order.save();
-	user.cart = { items: [] };
-	user.save()
+	req.user.cart = { items: [] };
+	req.user
+		.save()
 		.then(() => {
 			console.log('added order and cleared cart!');
 			res.sendStatus(200);

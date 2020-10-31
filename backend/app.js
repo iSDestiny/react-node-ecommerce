@@ -5,6 +5,7 @@ const app = express();
 const mongoose = require('mongoose');
 const session = require('express-session');
 const MongoDBStore = require('connect-mongodb-session')(session);
+const csrf = require('csurf');
 
 const authRoute = require('./routes/auth');
 const shopRoute = require('./routes/shop');
@@ -18,6 +19,9 @@ const store = new MongoDBStore({
 	uri: MONGODB_URI,
 	collection: 'sessions'
 });
+
+const csrfProtection = csrf();
+
 app.use(
 	cors({
 		origin: 'http://localhost:3000',
@@ -46,6 +50,15 @@ app.use(
 	})
 );
 
+app.use('/auth', authRoute);
+
+app.use(csrfProtection);
+
+app.get('/csrf', (req, res, next) => {
+	console.log('csrf token ' + req.csrfToken());
+	res.json({ csrfToken: req.csrfToken() });
+});
+
 app.use((req, res, next) => {
 	if (req.session.user) {
 		User.findById(req.session.user._id)
@@ -58,8 +71,6 @@ app.use((req, res, next) => {
 		next();
 	}
 });
-
-app.use('/auth', authRoute);
 
 app.use('/shop', shopRoute);
 

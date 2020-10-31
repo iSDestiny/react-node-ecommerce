@@ -27,17 +27,22 @@ router.post('/add-product', (req, res, next) => {
 
 router.post('/edit-product', (req, res, next) => {
 	const { id, title, image, price, description } = req.body;
-	Product.findByIdAndUpdate(id, {
-		$set: {
-			title: title,
-			imageUrl: image,
-			price: price,
-			description: description
-		}
-	})
-		.then((result) => {
-			console.log('successful edit!');
-			res.sendStatus(200);
+	Product.findById(id)
+		.then(async (product) => {
+			if (product.userId.toString() === req.user._id.toString()) {
+				product.title = title;
+				product.imageUrl = image;
+				product.description = description;
+				product.price = price;
+				await product.save();
+				console.log('successful edit!');
+				res.json({ success: true });
+			} else {
+				console.log(
+					'this user does not have permission to edit the product!'
+				);
+				res.json({ success: false });
+			}
 		})
 		.catch((err) => {
 			console.log(err);
