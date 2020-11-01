@@ -51,6 +51,7 @@ userSchema.methods.getCart = function () {
 			let products = user.cart.items;
 			let totalPrice = 0;
 			products = products.map((product) => {
+				// console.log(product);
 				totalPrice += product._id.price * product.quantity;
 				const productData = product._id;
 				return {

@@ -109,24 +109,29 @@ router.get('/orders', (req, res, next) => {
 });
 
 router.post('/create-order', async (req, res, next) => {
-	const cart = await req.user.getCart();
-	const order = new Order({
-		products: [...cart.products],
-		totalPrice: cart.totalPrice,
-		user: { _id: req.session.user }
-	});
-	await order.save();
-	req.user.cart = { items: [] };
-	req.user
-		.save()
-		.then(() => {
-			console.log('added order and cleared cart!');
-			res.sendStatus(200);
-		})
-		.catch((err) => {
-			console.log(err);
-			res.sendStatus(400);
+	try {
+		const cart = await req.user.getCart();
+		const order = new Order({
+			products: [...cart.products],
+			totalPrice: cart.totalPrice,
+			user: { _id: req.session.user }
 		});
+
+		await order.save();
+		req.user.cart = { items: [] };
+		req.user
+			.save()
+			.then(() => {
+				console.log('added order and cleared cart!');
+				res.sendStatus(200);
+			})
+			.catch((err) => {
+				console.log(err);
+				res.sendStatus(400);
+			});
+	} catch (err) {
+		res.sendStatus(400);
+	}
 });
 
 module.exports = router;
