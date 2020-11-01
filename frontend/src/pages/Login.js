@@ -17,6 +17,9 @@ const Login = (props) => {
 	const [email, setEmail] = useState('');
 	const [password, setPassword] = useState('');
 	const [failed, setFailed] = useState(false);
+	const [emailError, setEmailError] = useState(false);
+	const [passwordError, setPasswordError] = useState(false);
+	const [errorMessage, setErrorMessage] = useState('');
 	const history = useHistory();
 
 	const submitHandler = (event) => {
@@ -35,13 +38,27 @@ const Login = (props) => {
 				}
 			)
 			.then((res) => {
-				console.log(res);
+				setEmailError(false);
+				setPasswordError(false);
 				if (res.data.success) {
 					console.log('login success');
 					history.push('/');
 				} else {
 					console.log('login failure, info did not match');
-					setFailed(true);
+					if (res.data.allErrors) {
+						const params = new Set(
+							res.data.allErrors.map((err) => err.param)
+						);
+						if (params.has('password')) {
+							setPasswordError(true);
+						}
+						if (params.has('email')) {
+							setEmailError(true);
+						}
+					} else {
+						setErrorMessage(res.data.message);
+						setFailed(true);
+					}
 				}
 			})
 			.catch((err) => {
@@ -53,9 +70,7 @@ const Login = (props) => {
 	return (
 		<>
 			{failed && (
-				<ValidationErrorMessage>
-					Invalid email or password
-				</ValidationErrorMessage>
+				<ValidationErrorMessage>{errorMessage}</ValidationErrorMessage>
 			)}
 			<form onSubmit={submitHandler}>
 				<Grid
@@ -66,6 +81,12 @@ const Login = (props) => {
 				>
 					<Grid item className={classes.rootInput}>
 						<TextField
+							error={emailError}
+							helperText={
+								emailError
+									? 'Email must be valid (i.e. example@test.com)'
+									: null
+							}
 							variant="outlined"
 							label="Email"
 							value={email}
@@ -75,6 +96,12 @@ const Login = (props) => {
 					</Grid>
 					<Grid item className={classes.rootInput}>
 						<TextField
+							error={passwordError}
+							helperText={
+								passwordError
+									? 'Password must be at least 5 characters long'
+									: null
+							}
 							variant="outlined"
 							label="Password"
 							value={password}

@@ -12,6 +12,7 @@ const AddProduct = (props) => {
 	const [price, setPrice] = useState('');
 	const [description, setDescription] = useState('');
 	const [failed, setFailed] = useState(false);
+	const [validationMessages, setValidationMessages] = useState({});
 	const history = useHistory();
 
 	const { edit } = props;
@@ -48,8 +49,18 @@ const AddProduct = (props) => {
 				{ withCredentials: true }
 			)
 			.then((res) => {
-				console.log(res);
-				history.push('/products');
+				console.log(res.data);
+				const allErrors = res.data.allErrors;
+				if (allErrors) {
+					setValidationMessages({});
+					allErrors.forEach((err) => {
+						setValidationMessages((prev) => {
+							return { ...prev, [err.param]: err.msg };
+						});
+					});
+				} else {
+					history.push('/products');
+				}
 			})
 			.catch((err) => {
 				console.log(err);
@@ -77,10 +88,20 @@ const AddProduct = (props) => {
 					history.push('/admin-products');
 					setFailed(false);
 				} else {
-					setFailed(true);
-					console.log(
-						'User does not have permission to edit this product'
-					);
+					const allErrors = res.data.allErrors;
+					if (allErrors) {
+						setValidationMessages({});
+						allErrors.forEach((err) => {
+							setValidationMessages((prev) => {
+								return { ...prev, [err.param]: err.msg };
+							});
+						});
+					} else {
+						setFailed(true);
+						console.log(
+							'User does not have permission to edit this product'
+						);
+					}
 				}
 			})
 			.catch((err) => {
@@ -104,6 +125,8 @@ const AddProduct = (props) => {
 				>
 					<Grid item xs={12}>
 						<TextField
+							error={validationMessages.title !== undefined}
+							helperText={validationMessages.title}
 							label="Title"
 							value={title}
 							onChange={(e) => setTitle(e.target.value)}
@@ -112,6 +135,8 @@ const AddProduct = (props) => {
 					</Grid>
 					<Grid item xs={12}>
 						<TextField
+							error={validationMessages.image !== undefined}
+							helperText={validationMessages.image}
 							label="Image URL"
 							value={image}
 							onChange={(e) => setImage(e.target.value)}
@@ -120,6 +145,8 @@ const AddProduct = (props) => {
 					</Grid>
 					<Grid item xs={12}>
 						<TextField
+							error={validationMessages.price !== undefined}
+							helperText={validationMessages.price}
 							label="Price"
 							value={price}
 							onChange={(e) => setPrice(e.target.value)}
@@ -129,6 +156,8 @@ const AddProduct = (props) => {
 					</Grid>
 					<Grid item xs={12}>
 						<TextField
+							error={validationMessages.description !== undefined}
+							helperText={validationMessages.description}
 							label="Description"
 							value={description}
 							multiline

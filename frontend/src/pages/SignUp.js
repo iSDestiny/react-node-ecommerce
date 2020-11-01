@@ -17,6 +17,10 @@ const SignUp = (props) => {
 	const [email, setEmail] = useState('');
 	const [password, setPassword] = useState('');
 	const [confirmPassword, setConfirmPassword] = useState('');
+	const [passwordError, setPasswordError] = useState(false);
+	const [confirmPasswordError, setConfirmPasswordError] = useState(false);
+	const [emailError, setEmailError] = useState(false);
+	const [errorMessage, setErrorMessage] = useState('');
 	const [failed, setFailed] = useState(false);
 	const history = useHistory();
 
@@ -42,7 +46,26 @@ const SignUp = (props) => {
 					history.push('/login');
 				} else {
 					console.log('registration failed, email already exists!');
-					setFailed(true);
+					setPasswordError(false);
+					setEmailError(false);
+					setConfirmPasswordError(false);
+					if (res.data.allErrors) {
+						const params = new Set(
+							res.data.allErrors.map((err) => err.param)
+						);
+						if (params.has('password')) {
+							setPasswordError(true);
+						}
+						if (params.has('email')) {
+							setEmailError(true);
+						}
+						if (params.has('confirmPassword')) {
+							setConfirmPasswordError(true);
+						}
+					} else {
+						setErrorMessage(res.data.message);
+						setFailed(true);
+					}
 				}
 			})
 			.catch((err) => {
@@ -54,9 +77,7 @@ const SignUp = (props) => {
 	return (
 		<>
 			{failed && (
-				<ValidationErrorMessage>
-					Email already exists!
-				</ValidationErrorMessage>
+				<ValidationErrorMessage>{errorMessage}</ValidationErrorMessage>
 			)}
 			<form onSubmit={submitHandler}>
 				<Grid
@@ -67,9 +88,14 @@ const SignUp = (props) => {
 				>
 					<Grid item className={classes.rootInput}>
 						<TextField
+							error={emailError}
+							helperText={
+								emailError &&
+								'Email must be valid (i.e. example@test.com)'
+							}
 							variant="outlined"
 							label="Email"
-							type="email"
+							// type="email"
 							value={email}
 							onChange={(event) => setEmail(event.target.value)}
 							fullWidth
@@ -77,6 +103,11 @@ const SignUp = (props) => {
 					</Grid>
 					<Grid item className={classes.rootInput}>
 						<TextField
+							error={passwordError}
+							helperText={
+								passwordError &&
+								'Password must be at least 5 characters long'
+							}
 							variant="outlined"
 							label="Password"
 							value={password}
@@ -89,6 +120,10 @@ const SignUp = (props) => {
 					</Grid>
 					<Grid item className={classes.rootInput}>
 						<TextField
+							error={confirmPasswordError}
+							helperText={
+								confirmPasswordError && 'Passwords must match'
+							}
 							variant="outlined"
 							label="Confirm Password"
 							value={confirmPassword}
