@@ -1,4 +1,7 @@
 const express = require('express');
+const appRoot = require('app-root-path');
+const fs = require('fs');
+const path = require('path');
 const router = express.Router();
 const { body, validationResult } = require('express-validator');
 
@@ -10,7 +13,6 @@ const productValidators = [
 		.trim()
 		.matches(/^[a-z0-9 ]+$/i)
 		.isLength({ min: 3 }),
-	body('image', 'Must be a valid url').trim().isURL(),
 	body('price', 'Must be a decimal').trim().isFloat(),
 	body('description', 'Must be at least 5 characters long')
 		.trim()
@@ -18,17 +20,27 @@ const productValidators = [
 ];
 
 router.post('/add-product', productValidators, (req, res, next) => {
-	const { title, image, price, description } = req.body;
+	const { title, price, description } = req.body;
+	const image = req.file;
+	console.log(image);
 	const errors = validationResult(req);
 
-	if (!errors.isEmpty()) {
-		console.log(errors.array());
-		return res.json({ allErrors: errors.array() });
+	if (!errors.isEmpty() || !image) {
+		// console.log(errors.array());
+		let allErrors = [...errors.array()];
+		if (!image) {
+			allErrors.push({
+				param: 'image',
+				msg: 'Attached file must be an image'
+			});
+		}
+		// console.log(allErrors);
+		return res.json({ allErrors: allErrors });
 	}
 
 	const product = new Product({
 		title: title.trim(),
-		imageUrl: image.trim(),
+		imageUrl: image.path,
 		price: price.trim(),
 		description: description.trim(),
 		userId: req.session.user._id
@@ -46,18 +58,28 @@ router.post('/add-product', productValidators, (req, res, next) => {
 });
 
 router.post('/edit-product', productValidators, (req, res, next) => {
-	const { id, title, image, price, description } = req.body;
+	const { id, title, price, description } = req.body;
+	const image = req.file;
 	const errors = validationResult(req);
+	// console.log('approoot! ' + appRoot);
 
 	if (!errors.isEmpty()) {
 		console.log(errors.array());
 		return res.json({ allErrors: errors.array() });
 	}
+
 	Product.findById(id)
 		.then(async (product) => {
 			if (product.userId.toString() === req.user._id.toString()) {
 				product.title = title.trim();
-				product.imageUrl = image.trim();
+				if (image) {
+					fs.unlink(path.join(product.imageUrl), (err) => {
+						if (err) {
+							console.log(err);
+						}
+					});
+					product.imageUrl = image.path;
+				}
 				product.description = description.trim();
 				product.price = price.trim();
 				await product.save();
@@ -79,7 +101,17 @@ router.post('/edit-product', productValidators, (req, res, next) => {
 router.post('/delete-product', (req, res, next) => {
 	const { id } = req.body;
 	Product.findByIdAndRemove(id)
-		.then(async () => {
+		.then(async (product) => {
+			if (product) {
+				fs.unlink(
+					path.join(appRoot.toString(), product.imageUrl),
+					(err) => {
+						if (err) {
+							throw err;
+						}
+					}
+				);
+			}
 			console.log('successful delete!');
 			const users = await User.find({}).exec();
 			users.forEach(async (user) => {

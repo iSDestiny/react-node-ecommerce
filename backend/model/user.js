@@ -1,4 +1,3 @@
-const mongodb = require('mongodb');
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 // const getDb = require('../utility/database').getDb;
