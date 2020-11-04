@@ -8,7 +8,7 @@ import ValidationErrorMessage from '../UI/ValidationErrorMessage';
 const AddProduct = (props) => {
 	const { id } = useParams();
 	const [title, setTitle] = useState('');
-	const [image, setImage] = useState('');
+	const [image, setImage] = useState();
 	const [price, setPrice] = useState('');
 	const [description, setDescription] = useState('');
 	const [failed, setFailed] = useState(false);
@@ -22,13 +22,11 @@ const AddProduct = (props) => {
 			axios.get(`${backendDomain}/shop/products/${id}`).then((res) => {
 				console.log(res.data);
 				setTitle(res.data.title);
-				setImage(res.data.imageUrl);
 				setPrice(res.data.price);
 				setDescription(res.data.description);
 			});
 		} else {
 			setTitle('');
-			setImage('');
 			setPrice('');
 			setDescription('');
 		}
@@ -36,18 +34,18 @@ const AddProduct = (props) => {
 
 	const submitHandler = (event) => {
 		event.preventDefault();
+		const formData = new FormData();
+		formData.append('image', image);
+		formData.append('title', title);
+		formData.append('price', price);
+		formData.append('description', description);
+		formData.append('_csrf', props.csrfToken);
+		// console.log(formData);
 		axios
-			.post(
-				backendDomain + '/admin/add-product',
-				{
-					title: title,
-					image: image,
-					price: price,
-					description: description,
-					_csrf: props.csrfToken
-				},
-				{ withCredentials: true }
-			)
+			.post(backendDomain + '/admin/add-product', formData, {
+				withCredentials: true,
+				headers: { 'Content-Type': 'multipart/form-data' }
+			})
 			.then((res) => {
 				console.log(res.data);
 				const allErrors = res.data.allErrors;
@@ -69,19 +67,18 @@ const AddProduct = (props) => {
 
 	const editHandler = (event) => {
 		event.preventDefault();
+		const formData = new FormData();
+		formData.append('id', id);
+		formData.append('image', image);
+		formData.append('title', title);
+		formData.append('price', price);
+		formData.append('description', description);
+		formData.append('_csrf', props.csrfToken);
 		axios
-			.post(
-				backendDomain + '/admin/edit-product',
-				{
-					id: id,
-					title: title,
-					image: image,
-					price: price,
-					description: description,
-					_csrf: props.csrfToken
-				},
-				{ withCredentials: true }
-			)
+			.post(backendDomain + '/admin/edit-product', formData, {
+				withCredentials: true,
+				headers: { 'Content-Type': 'multipart/form-data' }
+			})
 			.then((res) => {
 				if (res.data.success) {
 					console.log(res);
@@ -137,9 +134,9 @@ const AddProduct = (props) => {
 						<TextField
 							error={validationMessages.image !== undefined}
 							helperText={validationMessages.image}
-							label="Image URL"
-							value={image}
-							onChange={(e) => setImage(e.target.value)}
+							label="Image"
+							type="file"
+							onChange={(e) => setImage(e.target.files[0])}
 							fullWidth
 						/>
 					</Grid>

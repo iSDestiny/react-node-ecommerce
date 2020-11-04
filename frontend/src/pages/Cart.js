@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import axios from 'axios';
 import backendDomain from '../utility/backendDomain';
+import buildUrl from '../utility/buildUrl';
 import {
 	Grid,
 	Divider,
@@ -146,7 +147,10 @@ const Cart = (props) => {
 									<div className={classes.image}>
 										<img
 											className={classes.img}
-											src={prod.imageUrl}
+											src={buildUrl(
+												backendDomain,
+												prod.imageUrl
+											)}
 											alt="product image"
 										/>
 									</div>

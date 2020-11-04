@@ -3,6 +3,7 @@ import axios from 'axios';
 import { useParams, useHistory } from 'react-router-dom';
 import { Grid, Typography, Button } from '@material-ui/core';
 import backendDomain from '../utility/backendDomain';
+import buildUrl from '../utility/buildUrl';
 
 const Product = (props) => {
 	const { id } = useParams();
@@ -31,8 +32,8 @@ const Product = (props) => {
 			)
 			.then((res) => {
 				console.log(res);
+				history.push('/cart');
 			});
-		history.push('/cart');
 	};
 	return (
 		<Grid container direction="column" alignItems="center" spacing={2}>
@@ -45,7 +46,7 @@ const Product = (props) => {
 					<Grid item>
 						<img
 							style={{ height: '20rem', width: 'auto' }}
-							src={product.imageUrl}
+							src={buildUrl(backendDomain, product.imageUrl)}
 							alt="product image"
 						/>
 					</Grid>

@@ -25,7 +25,6 @@ import PageNotFound from './pages/PageNotFound';
 const App = () => {
 	const [csrfToken, setCsrfToken] = useState();
 	const [isAuthenticated, setIsAuthenticated] = useState(false);
-	const [products, setProducts] = useState([]);
 	const [fetchDone, setFetchDone] = useState(false);
 
 	useEffect(() => {
@@ -39,14 +38,7 @@ const App = () => {
 			});
 	}, []);
 
-	const adminProducts = (
-		<Shop
-			pageType={2}
-			products={products}
-			setProducts={setProducts}
-			csrfToken={csrfToken}
-		/>
-	);
+	const adminProducts = <Shop pageType={2} csrfToken={csrfToken} />;
 
 	return (
 		<Router>
@@ -65,16 +57,10 @@ const App = () => {
 							csrfToken={csrfToken}
 							isAuthenticated={isAuthenticated}
 							pageType={0}
-							products={products}
-							setProducts={setProducts}
 						/>
 					</Route>
 					<Route exact path="/products">
-						<Shop
-							pageType={1}
-							products={products}
-							setProducts={setProducts}
-						/>
+						<Shop pageType={1} />
 					</Route>
 					<Route path="/products/:id">
 						<Product

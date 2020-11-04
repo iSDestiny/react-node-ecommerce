@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Grid, Typography } from '@material-ui/core';
+import { Grid, Typography, Link } from '@material-ui/core';
 import backendDomain from '../utility/backendDomain';
 
 const Orders = (props) => {
@@ -43,6 +43,11 @@ const Orders = (props) => {
 							<Typography variant="h5">
 								Order # {order._id}
 							</Typography>
+							<Link
+								href={`${backendDomain}/shop/invoice/${order._id}`}
+							>
+								Invoice
+							</Link>
 							<Typography variant="h6">
 								Total Price: ${order.totalPrice}
 							</Typography>

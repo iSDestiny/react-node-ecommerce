@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useHistory } from 'react-router-dom';
 import axios from 'axios';
 import { Paper, Grid, Typography, Button } from '@material-ui/core';
 import backendDomain from '../utility/backendDomain';
+import buildUrl from '../utility/buildUrl';
 import { makeStyles } from '@material-ui/core/styles';
 
 // const useStyles = makeStyles((theme) => ({
@@ -22,20 +23,63 @@ import { makeStyles } from '@material-ui/core/styles';
 // 		}
 // 	}
 // }));
+const ITEMS_PER_PAGE = 4;
+
 const Shop = (props) => {
 	const history = useHistory();
+	const [products, setProducts] = useState([]);
+	const [page, setPage] = useState(1);
+	const [error, setError] = useState(false);
+	const [loading, setLoading] = useState(true);
+	const [hasMore, setHasMore] = useState(false);
 	// const classes = useStyles();
 
+	const observer = useRef();
+	const lastProductElementRef = useCallback(
+		(node) => {
+			if (loading) return;
+			if (observer.current) observer.current.disconnect();
+			observer.current = new IntersectionObserver((entries) => {
+				if (entries[0].isIntersecting && hasMore) {
+					setPage((prev) => prev + 1);
+				}
+			});
+			if (node) observer.current.observe(node);
+		},
+		[loading, hasMore]
+	);
+
 	useEffect(() => {
+		setLoading(true);
+		setError(false);
+		let cancel;
 		const route =
 			props.pageType === 2 ? '/shop/admin-products' : '/shop/products';
+		const productsUrl = new URL(backendDomain + route);
+		productsUrl.searchParams.append('page', page);
+		productsUrl.searchParams.append('items', ITEMS_PER_PAGE);
+		console.log('hello');
 		axios
-			.get(backendDomain + route, { withCredentials: true })
+			.get(productsUrl.href, {
+				withCredentials: true,
+				cancelToken: new axios.CancelToken((c) => {
+					cancel = c;
+				})
+			})
 			.then((res) => {
-				console.log(res.data);
-				props.setProducts(res.data);
+				// console.log(res.data);
+				setProducts((prev) => {
+					return [...prev, ...res.data];
+				});
+				setLoading(false);
+				setHasMore(res.data.length > 0);
+			})
+			.catch((e) => {
+				if (axios.isCancel(e)) return;
+				setError(true);
 			});
-	}, []);
+		return () => cancel();
+	}, [page]);
 
 	const addToCartHandler = (id, price) => {
 		axios
@@ -58,15 +102,19 @@ const Shop = (props) => {
 			)
 			.then((res) => {
 				console.log(res);
-				props.setProducts((prev) => {
+				setProducts((prev) => {
 					return prev.filter((prod) => prod._id !== id);
 				});
 			});
 	};
 	return (
 		<Grid container spacing={4} justify="center">
-			{props.products.length > 0 ? (
-				props.products.map((item) => {
+			{products.length > 0 ? (
+				products.map((item, index) => {
+					// console.log('inside map!!');
+					// console.log(props.products);
+					// console.log(item);
+					// console.log(item._id);
 					let buttons = 'xd';
 					console.log(props.pageType);
 					switch (props.pageType) {
@@ -132,9 +180,18 @@ const Shop = (props) => {
 							);
 							break;
 					}
-					console.log('buttons ' + buttons);
 					return (
-						<Grid item xs={12} md={6} key={item._id}>
+						<Grid
+							item
+							xs={12}
+							md={6}
+							key={item._id}
+							ref={
+								products.length - 1 === index
+									? lastProductElementRef
+									: undefined
+							}
+						>
 							<Paper
 								elevation={2}
 								style={{
@@ -150,7 +207,10 @@ const Shop = (props) => {
 								</Typography>
 								<div styles={{ width: '100%', height: '100%' }}>
 									<img
-										src={item.imageUrl}
+										src={buildUrl(
+											backendDomain,
+											item.imageUrl
+										)}
 										alt="Image of the product"
 										style={{
 											margin: 'auto',
