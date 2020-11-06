@@ -15,7 +15,7 @@ const AddProduct = (props) => {
 	const [validationMessages, setValidationMessages] = useState({});
 	const history = useHistory();
 
-	const { edit } = props;
+	const { edit, token } = props;
 
 	useEffect(() => {
 		if (id) {
@@ -30,7 +30,7 @@ const AddProduct = (props) => {
 			setPrice('');
 			setDescription('');
 		}
-	}, [edit]);
+	}, [edit, id]);
 
 	const submitHandler = (event) => {
 		event.preventDefault();
@@ -39,16 +39,21 @@ const AddProduct = (props) => {
 		formData.append('title', title);
 		formData.append('price', price);
 		formData.append('description', description);
-		formData.append('_csrf', props.csrfToken);
 		// console.log(formData);
 		axios
 			.post(backendDomain + '/admin/add-product', formData, {
-				withCredentials: true,
-				headers: { 'Content-Type': 'multipart/form-data' }
+				headers: {
+					'Content-Type': 'multipart/form-data',
+					Authorization: 'Bearer ' + token
+				}
 			})
 			.then((res) => {
 				console.log(res.data);
-				const allErrors = res.data.allErrors;
+				history.push('/products');
+			})
+			.catch((err) => {
+				// console.log(err.response);
+				const allErrors = err.response.data.allErrors;
 				if (allErrors) {
 					setValidationMessages({});
 					allErrors.forEach((err) => {
@@ -57,11 +62,8 @@ const AddProduct = (props) => {
 						});
 					});
 				} else {
-					history.push('/products');
+					history.push('/500');
 				}
-			})
-			.catch((err) => {
-				console.log(err);
 			});
 	};
 
@@ -73,36 +75,36 @@ const AddProduct = (props) => {
 		formData.append('title', title);
 		formData.append('price', price);
 		formData.append('description', description);
-		formData.append('_csrf', props.csrfToken);
 		axios
-			.post(backendDomain + '/admin/edit-product', formData, {
-				withCredentials: true,
-				headers: { 'Content-Type': 'multipart/form-data' }
+			.put(backendDomain + '/admin/edit-product', formData, {
+				headers: {
+					'Content-Type': 'multipart/form-data',
+					Authorization: 'Bearer ' + token
+				}
 			})
 			.then((res) => {
-				if (res.data.success) {
-					console.log(res);
-					history.push('/admin-products');
-					setFailed(false);
-				} else {
-					const allErrors = res.data.allErrors;
-					if (allErrors) {
-						setValidationMessages({});
-						allErrors.forEach((err) => {
-							setValidationMessages((prev) => {
-								return { ...prev, [err.param]: err.msg };
-							});
-						});
-					} else {
-						setFailed(true);
-						console.log(
-							'User does not have permission to edit this product'
-						);
-					}
-				}
+				console.log(res);
+				history.push('/admin-products');
+				setFailed(false);
 			})
 			.catch((err) => {
 				console.log(err);
+				const allErrors = err.response.data.allErrors;
+				if (allErrors) {
+					setValidationMessages({});
+					allErrors.forEach((err) => {
+						setValidationMessages((prev) => {
+							return { ...prev, [err.param]: err.msg };
+						});
+					});
+				} else if (err.response.status === 401) {
+					setFailed(true);
+					console.log(
+						'User does not have permission to edit this product'
+					);
+				} else {
+					history.push('/500');
+				}
 			});
 	};
 

@@ -1,8 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import backendDomain from '../utility/backendDomain';
+import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { AppBar, Tabs, Tab, Button } from '@material-ui/core';
+import { AppBar, Tabs, Tab } from '@material-ui/core';
 
 const NavBar = (props) => {
 	const tabs = [
@@ -16,40 +14,8 @@ const NavBar = (props) => {
 		'/signup'
 	];
 
-	const { isAuthenticated, setIsAuthenticated, setFetchDone } = props;
+	const { isAuthenticated, logoutHandler } = props;
 	const location = useLocation();
-
-	useEffect(() => {
-		axios
-			.get(backendDomain + '/auth/authenticated', {
-				withCredentials: true
-			})
-			.then((res) => {
-				console.log('authentication!!');
-				console.log(res.data.isAuthenticated);
-				setIsAuthenticated(res.data.isAuthenticated);
-				setFetchDone(true);
-			})
-			.catch((err) => {
-				console.log('failed to get authentication');
-			});
-	}, [location.pathname]);
-
-	const logoutHandler = () => {
-		axios
-			.post(
-				backendDomain + '/auth/logout',
-				{ _csrf: props.csrfToken },
-				{ withCredentials: true }
-			)
-			.then((res) => {
-				console.log('logout success!!');
-				setIsAuthenticated(false);
-			})
-			.catch((err) => {
-				console.log(err);
-			});
-	};
 
 	const adminOnlyCommands = isAuthenticated
 		? [

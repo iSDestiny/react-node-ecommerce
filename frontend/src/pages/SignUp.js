@@ -32,8 +32,7 @@ const SignUp = (props) => {
 				{
 					email: email,
 					password: password,
-					confirmPassword: confirmPassword,
-					_csrf: props.csrfToken
+					confirmPassword: confirmPassword
 				},
 				{
 					headers: { 'Content-Type': 'application/json' },
@@ -95,7 +94,6 @@ const SignUp = (props) => {
 							}
 							variant="outlined"
 							label="Email"
-							// type="email"
 							value={email}
 							onChange={(event) => setEmail(event.target.value)}
 							fullWidth

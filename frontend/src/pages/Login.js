@@ -22,48 +22,64 @@ const Login = (props) => {
 	const [errorMessage, setErrorMessage] = useState('');
 	const history = useHistory();
 
+	const {
+		setUserId,
+		setToken,
+		setIsAuthenticated,
+		isAuthenticated,
+		autoLogout
+	} = props;
+
 	const submitHandler = (event) => {
 		event.preventDefault();
+		if (isAuthenticated) return history.replace('/');
 		axios
 			.post(
 				backendDomain + '/auth/login',
 				{
 					email: email,
-					password: password,
-					_csrf: props.csrfToken
+					password: password
 				},
 				{
-					headers: { 'Content-Type': 'application/json' },
-					withCredentials: true
+					headers: { 'Content-Type': 'application/json' }
+					// withCredentials: true
 				}
 			)
 			.then((res) => {
-				setEmailError(false);
-				setPasswordError(false);
-				if (res.data.success) {
-					console.log('login success');
-					history.push('/');
-				} else {
-					console.log('login failure, info did not match');
-					if (res.data.allErrors) {
-						const params = new Set(
-							res.data.allErrors.map((err) => err.param)
-						);
-						if (params.has('password')) {
-							setPasswordError(true);
-						}
-						if (params.has('email')) {
-							setEmailError(true);
-						}
-					} else {
-						setErrorMessage(res.data.message);
-						setFailed(true);
-					}
-				}
+				console.log('login success');
+				setUserId(res.data.userId);
+				setToken(res.data.token);
+				setIsAuthenticated(true);
+				localStorage.setItem('token', res.data.token);
+				localStorage.setItem('userId', res.data.userId);
+				const remainingTime = 60 * 60 * 1000;
+				const expiryDate = new Date(
+					new Date().getTime() + remainingTime
+				);
+				localStorage.setItem('expiryDate', expiryDate.toISOString());
+				autoLogout(remainingTime);
+				history.push('/');
 			})
 			.catch((err) => {
-				console.log(err);
+				console.log(err.response);
+				setEmailError(false);
+				setPasswordError(false);
+				const allErrors = err.response.data.allErrors;
 				console.log('failed to login');
+				if (allErrors) {
+					const params = new Set(allErrors.map((err) => err.param));
+					if (params.has('password')) {
+						setPasswordError(true);
+					}
+					if (params.has('email')) {
+						setEmailError(true);
+					}
+				} else if (err.response.status === 401) {
+					setErrorMessage(err.response.data.message);
+					setFailed(true);
+				} else {
+					history.push('/500');
+				}
 			});
 	};
 

@@ -23,114 +23,135 @@ import UpdatePassword from './pages/UpdatePassword';
 import PageNotFound from './pages/PageNotFound';
 
 const App = () => {
-	const [csrfToken, setCsrfToken] = useState();
 	const [isAuthenticated, setIsAuthenticated] = useState(false);
-	const [fetchDone, setFetchDone] = useState(false);
+	const [userId, setUserId] = useState();
+	const [token, setToken] = useState();
+	// const [fetchDone, setFetchDone] = useState(false);
+
+	const logoutHandler = () => {
+		setToken(null);
+		setUserId(null);
+		setIsAuthenticated(false);
+		localStorage.removeItem('token');
+		localStorage.removeItem('userId');
+		localStorage.removeItem('expiryDate');
+	};
+
+	const autoLogout = (time) => {
+		setTimeout(() => {
+			logoutHandler();
+		}, time);
+	};
 
 	useEffect(() => {
-		axios
-			.get(backendDomain + '/csrf', { withCredentials: true })
-			.then((res) => {
-				setCsrfToken(res.data.csrfToken);
-			})
-			.catch((err) => {
-				console.log(err);
-			});
+		const expiryDate = localStorage.getItem('expiryDate');
+		const storageToken = localStorage.getItem('token');
+		if (!storageToken || !expiryDate) return;
+		if (expiryDate <= new Date()) {
+			logoutHandler();
+			return;
+		}
+		setUserId(localStorage.getItem('userId'));
+		setToken(storageToken);
+		setIsAuthenticated(true);
+		autoLogout(new Date(expiryDate).getTime() - new Date().getTime());
 	}, []);
 
-	const adminProducts = <Shop pageType={2} csrfToken={csrfToken} />;
+	const adminProducts = (
+		<Shop
+			pageType={2}
+			token={token}
+			userId={userId}
+			isAuthenticated={isAuthenticated}
+		/>
+	);
 
 	return (
 		<Router>
 			<Route path="/">
 				<NavBar
-					csrfToken={csrfToken}
 					isAuthenticated={isAuthenticated}
-					setIsAuthenticated={setIsAuthenticated}
-					setFetchDone={setFetchDone}
+					logoutHandler={logoutHandler}
 				/>
 			</Route>
 			<Container maxWidth="lg" style={{ paddingTop: '50px' }}>
 				<Switch>
 					<Route exact path="/">
 						<Shop
-							csrfToken={csrfToken}
 							isAuthenticated={isAuthenticated}
+							token={token}
 							pageType={0}
 						/>
 					</Route>
 					<Route exact path="/products">
-						<Shop pageType={1} />
+						<Shop pageType={1} isAuthenticated={isAuthenticated} />
 					</Route>
 					<Route path="/products/:id">
 						<Product
-							csrfToken={csrfToken}
+							token={token}
 							isAuthenticated={isAuthenticated}
 						/>
 					</Route>
 					<AuthenticatedRoute
-						fetchDone={fetchDone}
 						isAuthenticated={isAuthenticated}
 						path="/cart"
 					>
-						<Cart csrfToken={csrfToken} />
+						<Cart token={token} />
 					</AuthenticatedRoute>
 					<AuthenticatedRoute
-						fetchDone={fetchDone}
 						isAuthenticated={isAuthenticated}
 						path="/orders"
 					>
-						<Orders />
+						<Orders token={token} />
 					</AuthenticatedRoute>
 					<AuthenticatedRoute
-						fetchDone={fetchDone}
 						isAuthenticated={isAuthenticated}
 						path="/add-product"
 					>
-						<AddProduct csrfToken={csrfToken} />
+						<AddProduct token={token} />
 					</AuthenticatedRoute>
 					<AuthenticatedRoute
-						fetchDone={fetchDone}
 						isAuthenticated={isAuthenticated}
 						path="/admin-products"
 					>
 						{adminProducts}
 					</AuthenticatedRoute>
 					<AuthenticatedRoute
-						fetchDone={fetchDone}
 						isAuthenticated={isAuthenticated}
 						path="/edit-product/:id"
 					>
-						<AddProduct edit csrfToken={csrfToken} />
+						<AddProduct edit token={token} />
 					</AuthenticatedRoute>
 					<UnauthenticatedRoute
 						isAuthenticated={isAuthenticated}
-						fetchDone={fetchDone}
 						path="/login"
 					>
-						<Login csrfToken={csrfToken} />
+						<Login
+							setUserId={setUserId}
+							setToken={setToken}
+							setIsAuthenticated={setIsAuthenticated}
+							isAuthenticated={isAuthenticated}
+							autoLogout={autoLogout}
+						/>
 					</UnauthenticatedRoute>
 					<UnauthenticatedRoute
 						isAuthenticated={isAuthenticated}
-						fetchDone={fetchDone}
 						path="/signup"
 					>
-						<SignUp csrfToken={csrfToken} />
+						<SignUp />
 					</UnauthenticatedRoute>
 					<UnauthenticatedRoute
 						isAuthenticated={isAuthenticated}
-						fetchDone={fetchDone}
 						exact
 						path="/reset"
 					>
-						<Reset csrfToken={csrfToken} />
+						<Reset />
 					</UnauthenticatedRoute>
 					<UnauthenticatedRoute
 						isAuthenticated={isAuthenticated}
-						fetchDone={fetchDone}
 						path="/reset/:token"
 					>
-						<UpdatePassword csrfToken={csrfToken} />
+						<UpdatePassword />
 					</UnauthenticatedRoute>
 					<Route component={PageNotFound} />
 				</Switch>

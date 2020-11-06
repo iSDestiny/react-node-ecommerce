@@ -33,6 +33,7 @@ const Shop = (props) => {
 	const [loading, setLoading] = useState(true);
 	const [hasMore, setHasMore] = useState(false);
 	// const classes = useStyles();
+	const { token, pageType, isAuthenticated } = props;
 
 	const observer = useRef();
 	const lastProductElementRef = useCallback(
@@ -54,7 +55,7 @@ const Shop = (props) => {
 		setError(false);
 		let cancel;
 		const route =
-			props.pageType === 2 ? '/shop/admin-products' : '/shop/products';
+			pageType === 2 ? '/shop/admin-products' : '/shop/products';
 		const productsUrl = new URL(backendDomain + route);
 		productsUrl.searchParams.append('page', page);
 		productsUrl.searchParams.append('items', ITEMS_PER_PAGE);
@@ -62,6 +63,7 @@ const Shop = (props) => {
 		axios
 			.get(productsUrl.href, {
 				withCredentials: true,
+				headers: { Authorization: 'Bearer ' + token },
 				cancelToken: new axios.CancelToken((c) => {
 					cancel = c;
 				})
@@ -81,25 +83,23 @@ const Shop = (props) => {
 		return () => cancel();
 	}, [page]);
 
-	const addToCartHandler = (id, price) => {
+	const addToCartHandler = (id) => {
 		axios
 			.post(
 				backendDomain + '/shop/add-to-cart',
-				{ id: id, _csrf: props.csrfToken },
-				{ withCredentials: true }
+				{ id: id },
+				{ headers: { Authorization: 'Bearer ' + token } }
 			)
 			.then((res) => {
 				console.log(res);
 			});
 	};
 
-	const deleteHandler = (id, price) => {
+	const deleteHandler = (id) => {
 		axios
-			.post(
-				backendDomain + '/admin/delete-product',
-				{ id: id, _csrf: props.csrfToken },
-				{ withCredentials: true }
-			)
+			.delete(backendDomain + '/admin/product/' + id, {
+				headers: { Authorization: 'Bearer ' + token }
+			})
 			.then((res) => {
 				console.log(res);
 				setProducts((prev) => {
@@ -116,10 +116,10 @@ const Shop = (props) => {
 					// console.log(item);
 					// console.log(item._id);
 					let buttons = 'xd';
-					console.log(props.pageType);
-					switch (props.pageType) {
+					console.log(pageType);
+					switch (pageType) {
 						case 0:
-							buttons = props.isAuthenticated && (
+							buttons = isAuthenticated && (
 								<Button
 									color="primary"
 									variant="outlined"
@@ -167,7 +167,7 @@ const Shop = (props) => {
 										color="primary"
 										variant="outlined"
 										onClick={() => {
-											deleteHandler(item._id, item.price);
+											deleteHandler(item._id);
 										}}
 										style={{
 											marginTop: '1rem',

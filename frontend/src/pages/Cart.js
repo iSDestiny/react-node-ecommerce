@@ -37,10 +37,13 @@ const Cart = (props) => {
 	const [idQty, setIdQty] = useState({});
 	const [totalPrice, setTotalPrice] = useState(0);
 	const history = useHistory();
+	const { token } = props;
 
 	useEffect(() => {
 		axios
-			.get(backendDomain + '/shop/cart', { withCredentials: true })
+			.get(backendDomain + '/shop/cart', {
+				headers: { Authorization: 'Bearer ' + token }
+			})
 			.then((res) => {
 				setIdQty((prev) => {
 					let newIdQty = { ...prev };
@@ -56,11 +59,9 @@ const Cart = (props) => {
 
 	const deleteHandler = (id) => {
 		axios
-			.post(
-				backendDomain + '/shop/delete-cart-item',
-				{ id: id, _csrf: props.csrfToken },
-				{ withCredentials: true }
-			)
+			.delete(backendDomain + `/shop/cart-item/${id}`, {
+				headers: { Authorization: 'Bearer ' + token }
+			})
 			.then((res) => {
 				console.log('SUCCESSFUL DELETE');
 				setCart(res.data);
@@ -73,10 +74,13 @@ const Cart = (props) => {
 					return newIdQty;
 				});
 				console.log('SUCCESSFUL DELETE');
+			})
+			.catch((err) => {
+				history.push('/500');
 			});
 	};
 
-	const handleQtyChange = (event, id, price) => {
+	const handleQtyChange = (event, id) => {
 		if (!event.target.value.includes('.')) {
 			setIdQty((prev) => {
 				let newIdQty = { ...prev };
@@ -88,14 +92,13 @@ const Cart = (props) => {
 			deleteHandler(id);
 		} else if (event.target.value && !event.target.value.includes('.')) {
 			axios
-				.post(
+				.put(
 					backendDomain + '/shop/edit-cart',
 					{
 						id: id,
-						quantity: event.target.value,
-						_csrf: props.csrfToken
+						quantity: event.target.value
 					},
-					{ withCredentials: true }
+					{ headers: { Authorization: 'Bearer ' + token } }
 				)
 				.then((res) => {
 					console.log(res);
@@ -109,8 +112,8 @@ const Cart = (props) => {
 		axios
 			.post(
 				backendDomain + '/shop/create-order',
-				{ _csrf: props.csrfToken },
-				{ withCredentials: true }
+				{},
+				{ headers: { Authorization: 'Bearer ' + token } }
 			)
 			.then((res) => {
 				console.log(res);

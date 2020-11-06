@@ -9,6 +9,8 @@ const Product = (props) => {
 	const { id } = useParams();
 	const history = useHistory();
 	const [product, setProduct] = useState();
+
+	const { token } = props;
 	useEffect(() => {
 		axios
 			.get(backendDomain + `/shop/products/${id}`, {
@@ -18,17 +20,16 @@ const Product = (props) => {
 				console.log(res.data);
 				setProduct(res.data);
 			});
-	}, []);
+	}, [id]);
 	const addToCartHandler = () => {
 		axios
 			.post(
 				backendDomain + '/shop/add-to-cart',
 				{
-					_csrf: props.csrfToken,
 					id: id,
 					price: product.price
 				},
-				{ withCredentials: true }
+				{ headers: { Authorization: 'Bearer ' + token } }
 			)
 			.then((res) => {
 				console.log(res);

@@ -1,22 +1,42 @@
 import React, { useState, useEffect } from 'react';
+import { useHistory } from 'react-router-dom';
 import axios from 'axios';
 import { Grid, Typography, Link } from '@material-ui/core';
 import backendDomain from '../utility/backendDomain';
 
 const Orders = (props) => {
 	const [orders, setOrders] = useState([]);
+	const { token } = props;
+	const history = useHistory();
 
 	useEffect(() => {
 		axios
-			.get(backendDomain + '/shop/orders', { withCredentials: true })
+			.get(backendDomain + '/shop/orders', {
+				headers: { Authorization: 'Bearer ' + token }
+			})
 			.then((res) => {
 				console.log(res.data);
 				setOrders(res.data);
 			})
 			.catch((err) => {
 				console.log(err);
+				if (err.response.status === 401) history.push('/login');
+				else history.push('/500');
 			});
 	}, []);
+
+	const fetchInvoice = (id) => {
+		axios
+			.get(`${backendDomain}/shop/invoice/${id}`, {
+				headers: { Authorization: 'Bearer ' + token },
+				responseType: 'blob'
+			})
+			.then((res) => {
+				console.log(res);
+				const file = window.URL.createObjectURL(res.data);
+				window.open(file, '_blank');
+			});
+	};
 
 	return (
 		<Grid container alignItems="center" direction="column">
@@ -44,7 +64,9 @@ const Orders = (props) => {
 								Order # {order._id}
 							</Typography>
 							<Link
-								href={`${backendDomain}/shop/invoice/${order._id}`}
+								onClick={() => {
+									fetchInvoice(order._id);
+								}}
 							>
 								Invoice
 							</Link>
