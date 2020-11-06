@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
@@ -52,7 +53,7 @@ app.use(morgan('combined', { stream: accessLogStream }));
 
 app.use(
 	cors({
-		origin: 'http://localhost:3000',
+		origin: process.env.CLIENT_ORIGIN,
 		allowedHeaders: ['Content-Type', 'Authorization'],
 		methods: ['POST', 'PUT', 'GET', 'OPTIONS', 'HEAD', 'DELETE'],
 		credentials: true
@@ -72,6 +73,7 @@ app.use('/shop', shopRoute);
 app.use('/admin', adminRoute);
 
 app.use((error, req, res, next) => {
+	console.log('ERROR');
 	console.log(error.message, error.allErrors);
 	const status = error.status || 500;
 	res.status(status).json({
