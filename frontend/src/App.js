@@ -1,13 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import {
-	BrowserRouter as Router,
-	Switch,
-	Route,
-	useLocation
-} from 'react-router-dom';
-import axios from 'axios';
+import React, { useState, useEffect, useCallback } from 'react';
+import { BrowserRouter as Router, Switch, Route } from 'react-router-dom';
 import NavBar from './components/NavBar';
-import { Container, Grid } from '@material-ui/core';
+import { Container } from '@material-ui/core';
 import AddProduct from './pages/AddProduct';
 import Shop from './pages/Shop';
 import Product from './pages/Product';
@@ -16,7 +10,6 @@ import Orders from './pages/Orders';
 import Login from './pages/Login';
 import SignUp from './pages/SignUp';
 import Reset from './pages/Reset';
-import backendDomain from './utility/backendDomain';
 import AuthenticatedRoute from './utility/AuthenticatedRoute';
 import UnauthenticatedRoute from './utility/UnauthenticatedRoute';
 import UpdatePassword from './pages/UpdatePassword';
@@ -26,7 +19,12 @@ const App = () => {
 	const [isAuthenticated, setIsAuthenticated] = useState(false);
 	const [userId, setUserId] = useState();
 	const [token, setToken] = useState();
-	// const [fetchDone, setFetchDone] = useState(false);
+
+	const autoLogout = useCallback((time) => {
+		setTimeout(() => {
+			logoutHandler();
+		}, time);
+	}, []);
 
 	const logoutHandler = () => {
 		setToken(null);
@@ -35,12 +33,6 @@ const App = () => {
 		localStorage.removeItem('token');
 		localStorage.removeItem('userId');
 		localStorage.removeItem('expiryDate');
-	};
-
-	const autoLogout = (time) => {
-		setTimeout(() => {
-			logoutHandler();
-		}, time);
 	};
 
 	useEffect(() => {
@@ -55,7 +47,7 @@ const App = () => {
 		setToken(storageToken);
 		setIsAuthenticated(true);
 		autoLogout(new Date(expiryDate).getTime() - new Date().getTime());
-	}, []);
+	}, [autoLogout]);
 
 	const adminProducts = (
 		<Shop

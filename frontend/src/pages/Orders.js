@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useHistory } from 'react-router-dom';
 import axios from 'axios';
 import { Grid, Typography, Link } from '@material-ui/core';
-import backendDomain from '../utility/backendDomain';
 
 const Orders = (props) => {
 	const [orders, setOrders] = useState([]);
@@ -11,7 +10,7 @@ const Orders = (props) => {
 
 	useEffect(() => {
 		axios
-			.get(backendDomain + '/shop/orders', {
+			.get(process.env.REACT_APP_BACKEND_DOMAIN + '/shop/orders', {
 				headers: { Authorization: 'Bearer ' + token }
 			})
 			.then((res) => {
@@ -23,11 +22,11 @@ const Orders = (props) => {
 				if (err.response.status === 401) history.push('/login');
 				else history.push('/500');
 			});
-	}, []);
+	}, [history, token]);
 
 	const fetchInvoice = (id) => {
 		axios
-			.get(`${backendDomain}/shop/invoice/${id}`, {
+			.get(`${process.env.REACT_APP_BACKEND_DOMAIN}/shop/invoice/${id}`, {
 				headers: { Authorization: 'Bearer ' + token },
 				responseType: 'blob'
 			})

@@ -3,7 +3,6 @@ import { Grid, TextField, Button } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import { useHistory, useParams } from 'react-router-dom';
 import axios from 'axios';
-import backendDomain from '../utility/backendDomain';
 import ValidationErrorMessage from '../UI/ValidationErrorMessage';
 
 const useStyles = makeStyles({
@@ -24,9 +23,12 @@ const UpdatePassword = (props) => {
 
 	useEffect(() => {
 		axios
-			.get(backendDomain + `/auth/reset/${token}`, {
-				withCredentials: true
-			})
+			.get(
+				process.env.REACT_APP_BACKEND_DOMAIN + `/auth/reset/${token}`,
+				{
+					withCredentials: true
+				}
+			)
 			.then((res) => {
 				const { userId, success } = res.data;
 				if (success) {
@@ -36,13 +38,13 @@ const UpdatePassword = (props) => {
 				}
 				setLoading(false);
 			});
-	}, []);
+	}, [history, token]);
 
 	const submitHandler = (event) => {
 		event.preventDefault();
 		axios
 			.post(
-				backendDomain + '/auth/new-password',
+				process.env.REACT_APP_BACKEND_DOMAIN + '/auth/new-password',
 				{
 					password: password,
 					_csrf: props.csrfToken,

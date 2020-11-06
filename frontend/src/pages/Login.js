@@ -3,7 +3,6 @@ import { Grid, TextField, Button } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import { useHistory, Link } from 'react-router-dom';
 import axios from 'axios';
-import backendDomain from '../utility/backendDomain';
 import ValidationErrorMessage from '../UI/ValidationErrorMessage';
 
 const useStyles = makeStyles({
@@ -35,7 +34,7 @@ const Login = (props) => {
 		if (isAuthenticated) return history.replace('/');
 		axios
 			.post(
-				backendDomain + '/auth/login',
+				process.env.REACT_APP_BACKEND_DOMAIN + '/auth/login',
 				{
 					email: email,
 					password: password

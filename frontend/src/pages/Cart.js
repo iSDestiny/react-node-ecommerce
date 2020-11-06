@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import axios from 'axios';
-import backendDomain from '../utility/backendDomain';
 import buildUrl from '../utility/buildUrl';
 import {
 	Grid,
@@ -41,7 +40,7 @@ const Cart = (props) => {
 
 	useEffect(() => {
 		axios
-			.get(backendDomain + '/shop/cart', {
+			.get(process.env.REACT_APP_BACKEND_DOMAIN + '/shop/cart', {
 				headers: { Authorization: 'Bearer ' + token }
 			})
 			.then((res) => {
@@ -55,13 +54,16 @@ const Cart = (props) => {
 				setTotalPrice(res.data.totalPrice);
 				setCart(res.data);
 			});
-	}, []);
+	}, [token]);
 
 	const deleteHandler = (id) => {
 		axios
-			.delete(backendDomain + `/shop/cart-item/${id}`, {
-				headers: { Authorization: 'Bearer ' + token }
-			})
+			.delete(
+				process.env.REACT_APP_BACKEND_DOMAIN + `/shop/cart-item/${id}`,
+				{
+					headers: { Authorization: 'Bearer ' + token }
+				}
+			)
 			.then((res) => {
 				console.log('SUCCESSFUL DELETE');
 				setCart(res.data);
@@ -93,7 +95,7 @@ const Cart = (props) => {
 		} else if (event.target.value && !event.target.value.includes('.')) {
 			axios
 				.put(
-					backendDomain + '/shop/edit-cart',
+					process.env.REACT_APP_BACKEND_DOMAIN + '/shop/edit-cart',
 					{
 						id: id,
 						quantity: event.target.value
@@ -111,7 +113,7 @@ const Cart = (props) => {
 	const orderHandler = () => {
 		axios
 			.post(
-				backendDomain + '/shop/create-order',
+				process.env.REACT_APP_BACKEND_DOMAIN + '/shop/create-order',
 				{},
 				{ headers: { Authorization: 'Bearer ' + token } }
 			)
@@ -151,10 +153,11 @@ const Cart = (props) => {
 										<img
 											className={classes.img}
 											src={buildUrl(
-												backendDomain,
+												process.env
+													.REACT_APP_BACKEND_DOMAIN,
 												prod.imageUrl
 											)}
-											alt="product image"
+											alt="product"
 										/>
 									</div>
 								</Grid>

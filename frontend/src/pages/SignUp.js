@@ -3,7 +3,6 @@ import { Grid, TextField, Button } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import { useHistory } from 'react-router-dom';
 import axios from 'axios';
-import backendDomain from '../utility/backendDomain';
 import ValidationErrorMessage from '../UI/ValidationErrorMessage';
 
 const useStyles = makeStyles({
@@ -28,7 +27,7 @@ const SignUp = (props) => {
 		event.preventDefault();
 		axios
 			.post(
-				backendDomain + '/auth/signup',
+				process.env.REACT_APP_BACKEND_DOMAIN + '/auth/signup',
 				{
 					email: email,
 					password: password,

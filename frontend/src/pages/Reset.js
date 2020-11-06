@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
 import { Grid, TextField, Button } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import { useHistory } from 'react-router-dom';
+// import { useHistory } from 'react-router-dom';
 import axios from 'axios';
-import backendDomain from '../utility/backendDomain';
 import ValidationErrorMessage from '../UI/ValidationErrorMessage';
 import SuccessMessage from '../UI/SuccessMessage';
 
@@ -24,7 +23,7 @@ const Reset = (props) => {
 		event.preventDefault();
 		axios
 			.post(
-				backendDomain + '/auth/reset',
+				process.env.REACT_APP_BACKEND_DOMAIN + '/auth/reset',
 				{
 					email: email,
 					_csrf: props.csrfToken

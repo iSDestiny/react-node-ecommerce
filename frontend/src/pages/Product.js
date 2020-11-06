@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useParams, useHistory } from 'react-router-dom';
 import { Grid, Typography, Button } from '@material-ui/core';
-import backendDomain from '../utility/backendDomain';
 import buildUrl from '../utility/buildUrl';
 
 const Product = (props) => {
@@ -13,9 +12,12 @@ const Product = (props) => {
 	const { token } = props;
 	useEffect(() => {
 		axios
-			.get(backendDomain + `/shop/products/${id}`, {
-				withCredentials: true
-			})
+			.get(
+				process.env.REACT_APP_BACKEND_DOMAIN + `/shop/products/${id}`,
+				{
+					withCredentials: true
+				}
+			)
 			.then((res) => {
 				console.log(res.data);
 				setProduct(res.data);
@@ -24,7 +26,7 @@ const Product = (props) => {
 	const addToCartHandler = () => {
 		axios
 			.post(
-				backendDomain + '/shop/add-to-cart',
+				process.env.REACT_APP_BACKEND_DOMAIN + '/shop/add-to-cart',
 				{
 					id: id,
 					price: product.price
@@ -47,8 +49,11 @@ const Product = (props) => {
 					<Grid item>
 						<img
 							style={{ height: '20rem', width: 'auto' }}
-							src={buildUrl(backendDomain, product.imageUrl)}
-							alt="product image"
+							src={buildUrl(
+								process.env.REACT_APP_BACKEND_DOMAIN,
+								product.imageUrl
+							)}
+							alt="product"
 						/>
 					</Grid>
 					<Grid item>

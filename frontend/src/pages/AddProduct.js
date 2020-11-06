@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useHistory } from 'react-router-dom';
 import axios from 'axios';
-import { Grid, TextField, Button, InputAdornment } from '@material-ui/core';
-import backendDomain from '../utility/backendDomain';
+import { Grid, TextField, Button } from '@material-ui/core';
 import ValidationErrorMessage from '../UI/ValidationErrorMessage';
 
 const AddProduct = (props) => {
@@ -19,12 +18,16 @@ const AddProduct = (props) => {
 
 	useEffect(() => {
 		if (id) {
-			axios.get(`${backendDomain}/shop/products/${id}`).then((res) => {
-				console.log(res.data);
-				setTitle(res.data.title);
-				setPrice(res.data.price);
-				setDescription(res.data.description);
-			});
+			axios
+				.get(
+					`${process.env.REACT_APP_BACKEND_DOMAIN}/shop/products/${id}`
+				)
+				.then((res) => {
+					console.log(res.data);
+					setTitle(res.data.title);
+					setPrice(res.data.price);
+					setDescription(res.data.description);
+				});
 		} else {
 			setTitle('');
 			setPrice('');
@@ -41,12 +44,16 @@ const AddProduct = (props) => {
 		formData.append('description', description);
 		// console.log(formData);
 		axios
-			.post(backendDomain + '/admin/add-product', formData, {
-				headers: {
-					'Content-Type': 'multipart/form-data',
-					Authorization: 'Bearer ' + token
+			.post(
+				process.env.REACT_APP_BACKEND_DOMAIN + '/admin/add-product',
+				formData,
+				{
+					headers: {
+						'Content-Type': 'multipart/form-data',
+						Authorization: 'Bearer ' + token
+					}
 				}
-			})
+			)
 			.then((res) => {
 				console.log(res.data);
 				history.push('/products');
@@ -76,12 +83,16 @@ const AddProduct = (props) => {
 		formData.append('price', price);
 		formData.append('description', description);
 		axios
-			.put(backendDomain + '/admin/edit-product', formData, {
-				headers: {
-					'Content-Type': 'multipart/form-data',
-					Authorization: 'Bearer ' + token
+			.put(
+				process.env.REACT_APP_BACKEND_DOMAIN + '/admin/edit-product',
+				formData,
+				{
+					headers: {
+						'Content-Type': 'multipart/form-data',
+						Authorization: 'Bearer ' + token
+					}
 				}
-			})
+			)
 			.then((res) => {
 				console.log(res);
 				history.push('/admin-products');

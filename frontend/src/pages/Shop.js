@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Link, useHistory } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { Paper, Grid, Typography, Button } from '@material-ui/core';
-import backendDomain from '../utility/backendDomain';
 import buildUrl from '../utility/buildUrl';
-import { makeStyles } from '@material-ui/core/styles';
+// import { makeStyles } from '@material-ui/core/styles';
 
 // const useStyles = makeStyles((theme) => ({
 // 	fade: {
@@ -26,7 +25,6 @@ import { makeStyles } from '@material-ui/core/styles';
 const ITEMS_PER_PAGE = 4;
 
 const Shop = (props) => {
-	const history = useHistory();
 	const [products, setProducts] = useState([]);
 	const [page, setPage] = useState(1);
 	const [error, setError] = useState(false);
@@ -56,7 +54,9 @@ const Shop = (props) => {
 		let cancel;
 		const route =
 			pageType === 2 ? '/shop/admin-products' : '/shop/products';
-		const productsUrl = new URL(backendDomain + route);
+		const productsUrl = new URL(
+			process.env.REACT_APP_BACKEND_DOMAIN + route
+		);
 		productsUrl.searchParams.append('page', page);
 		productsUrl.searchParams.append('items', ITEMS_PER_PAGE);
 		console.log('hello');
@@ -81,12 +81,12 @@ const Shop = (props) => {
 				setError(true);
 			});
 		return () => cancel();
-	}, [page]);
+	}, [page, token, pageType]);
 
 	const addToCartHandler = (id) => {
 		axios
 			.post(
-				backendDomain + '/shop/add-to-cart',
+				process.env.REACT_APP_BACKEND_DOMAIN + '/shop/add-to-cart',
 				{ id: id },
 				{ headers: { Authorization: 'Bearer ' + token } }
 			)
@@ -97,9 +97,12 @@ const Shop = (props) => {
 
 	const deleteHandler = (id) => {
 		axios
-			.delete(backendDomain + '/admin/product/' + id, {
-				headers: { Authorization: 'Bearer ' + token }
-			})
+			.delete(
+				process.env.REACT_APP_BACKEND_DOMAIN + '/admin/product/' + id,
+				{
+					headers: { Authorization: 'Bearer ' + token }
+				}
+			)
 			.then((res) => {
 				console.log(res);
 				setProducts((prev) => {
@@ -111,10 +114,6 @@ const Shop = (props) => {
 		<Grid container spacing={4} justify="center">
 			{products.length > 0 ? (
 				products.map((item, index) => {
-					// console.log('inside map!!');
-					// console.log(props.products);
-					// console.log(item);
-					// console.log(item._id);
 					let buttons = 'xd';
 					console.log(pageType);
 					switch (pageType) {
@@ -179,6 +178,8 @@ const Shop = (props) => {
 								</>
 							);
 							break;
+						default:
+							buttons = null;
 					}
 					return (
 						<Grid
@@ -208,10 +209,11 @@ const Shop = (props) => {
 								<div styles={{ width: '100%', height: '100%' }}>
 									<img
 										src={buildUrl(
-											backendDomain,
+											process.env
+												.REACT_APP_BACKEND_DOMAIN,
 											item.imageUrl
 										)}
-										alt="Image of the product"
+										alt="product"
 										style={{
 											margin: 'auto',
 											display: 'block',
