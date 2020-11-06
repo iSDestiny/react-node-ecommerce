@@ -3,27 +3,21 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const app = express();
 const mongoose = require('mongoose');
-const session = require('express-session');
-const MongoDBStore = require('connect-mongodb-session')(session);
-const csrf = require('csurf');
 const multer = require('multer');
 const crypto = require('crypto');
 const path = require('path');
+const helmet = require('helmet');
+const compression = require('compression');
+const morgan = require('morgan');
+const fs = require('fs');
 
 const authRoute = require('./routes/auth');
 const shopRoute = require('./routes/shop');
 const adminRoute = require('./routes/admin');
 
-const MONGODB_URI =
-	'mongodb+srv://jason:matkim525@cluster0.q46pp.mongodb.net/node-course?retryWrites=true&w=majority';
+const MONGODB_URI = `mongodb+srv://${process.env.MONGO_USER}:${process.env.MONGO_PASSWORD}@cluster0.q46pp.mongodb.net/${process.env.MONGO_DEFAULT_DATABASE}?retryWrites=true&w=majority`;
+// const __dirname = path.resolve();
 
-const User = require('./model/user');
-const store = new MongoDBStore({
-	uri: MONGODB_URI,
-	collection: 'sessions'
-});
-
-const csrfProtection = csrf();
 const fileStorage = multer.diskStorage({
 	destination: (req, file, cb) => {
 		cb(null, 'images');
@@ -47,10 +41,20 @@ const fileFilter = (req, file, cb) => {
 	}
 };
 
+const accessLogStream = fs.createWriteStream(
+	path.join(__dirname, 'access.log'),
+	{ flags: 'a' }
+);
+
+app.use(helmet());
+app.use(compression());
+app.use(morgan('combined', { stream: accessLogStream }));
+
 app.use(
 	cors({
-		// origin: 'http://localhost:3000',
-		// methods: ['POST', 'PUT', 'GET', 'OPTIONS', 'HEAD'],
+		origin: 'http://localhost:3000',
+		allowedHeaders: ['Content-Type', 'Authorization'],
+		methods: ['POST', 'PUT', 'GET', 'OPTIONS', 'HEAD', 'DELETE'],
 		credentials: true
 	})
 );
@@ -61,54 +65,19 @@ app.use(
 );
 app.use('/images', express.static(path.join(__dirname, 'images')));
 
-app.use((req, res, next) => {
-	const { url } = req;
-	const iscookiesent = req.headers.cookie;
-	console.log({ url });
-	console.log({ iscookiesent });
-	next();
-});
-
-app.use(
-	session({
-		secret: 'my secret',
-		resave: false,
-		saveUninitialized: false,
-		store: store
-	})
-);
-
 app.use('/auth', authRoute);
-
-app.use(csrfProtection);
-
-app.get('/csrf', (req, res, next) => {
-	console.log('csrf token ' + req.csrfToken());
-	res.json({ csrfToken: req.csrfToken() });
-});
-
-app.use((req, res, next) => {
-	if (req.session.user) {
-		User.findById(req.session.user._id)
-			.then((user) => {
-				if (!user) return next();
-				req.user = user;
-				next();
-			})
-			.catch((err) => {
-				throw new Error(err);
-			});
-	} else {
-		next();
-	}
-});
 
 app.use('/shop', shopRoute);
 
 app.use('/admin', adminRoute);
 
-app.use((err, req, res, next) => {
-	res.json(500);
+app.use((error, req, res, next) => {
+	console.log(error.message, error.allErrors);
+	const status = error.status || 500;
+	res.status(status).json({
+		message: error.message,
+		allErrors: error.allErrors
+	});
 });
 
 app.get('/', (req, res, next) => {
@@ -117,9 +86,8 @@ app.get('/', (req, res, next) => {
 
 mongoose
 	.connect(MONGODB_URI)
-	.then((result) => {
-		// console.log(result)
-		app.listen(8080);
+	.then(() => {
+		app.listen(process.env.PORT || 8080);
 	})
 	.catch((err) => {
 		console.log(err);

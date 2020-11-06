@@ -1,12 +1,15 @@
 const express = require('express');
 const appRoot = require('app-root-path');
+const isAuth = require('../middleware/isAuth');
+const ValidationError = require('../errors/ValidationError');
 const fs = require('fs');
 const path = require('path');
-const router = express.Router();
 const { body, validationResult } = require('express-validator');
 
 const Product = require('../model/product');
 const User = require('../model/user');
+
+const router = express.Router();
 
 const productValidators = [
 	body('title', 'Must be alphanumeric and at least 3 characters long')
@@ -19,10 +22,10 @@ const productValidators = [
 		.isLength({ min: 5 })
 ];
 
-router.post('/add-product', productValidators, (req, res, next) => {
+router.post('/add-product', isAuth, productValidators, (req, res, next) => {
 	const { title, price, description } = req.body;
 	const image = req.file;
-	console.log(image);
+	// console.log(image);
 	const errors = validationResult(req);
 
 	if (!errors.isEmpty() || !image) {
@@ -34,8 +37,8 @@ router.post('/add-product', productValidators, (req, res, next) => {
 				msg: 'Attached file must be an image'
 			});
 		}
-		// console.log(allErrors);
-		return res.json({ allErrors: allErrors });
+		// return res.json({ allErrors: allErrors });
+		throw new ValidationError('user entered incorrect input', allErrors);
 	}
 
 	const product = new Product({
@@ -43,7 +46,7 @@ router.post('/add-product', productValidators, (req, res, next) => {
 		imageUrl: image.path,
 		price: price.trim(),
 		description: description.trim(),
-		userId: req.session.user._id
+		userId: req.userId
 	});
 	product
 		.save()
@@ -53,29 +56,37 @@ router.post('/add-product', productValidators, (req, res, next) => {
 		})
 		.catch((err) => {
 			console.log(err);
-			res.sendStatus(400);
+			err.status = 500;
+			next(err);
 		});
 });
 
-router.post('/edit-product', productValidators, (req, res, next) => {
+router.put('/edit-product', isAuth, productValidators, (req, res, next) => {
 	const { id, title, price, description } = req.body;
 	const image = req.file;
 	const errors = validationResult(req);
 	// console.log('approoot! ' + appRoot);
 
 	if (!errors.isEmpty()) {
-		console.log(errors.array());
-		return res.json({ allErrors: errors.array() });
+		let allErrors = [...errors.array()];
+		if (!image) {
+			allErrors.push({
+				param: 'image',
+				msg: 'Attached file must be an image'
+			});
+		}
+		// return res.json({ allErrors: errors.array() });
+		throw new ValidationError('user entered incorrect input', allErrors);
 	}
 
 	Product.findById(id)
 		.then(async (product) => {
-			if (product.userId.toString() === req.user._id.toString()) {
+			if (product.userId.toString() === req.userId.toString()) {
 				product.title = title.trim();
 				if (image) {
 					fs.unlink(path.join(product.imageUrl), (err) => {
 						if (err) {
-							console.log(err);
+							throw new Error();
 						}
 					});
 					product.imageUrl = image.path;
@@ -89,29 +100,30 @@ router.post('/edit-product', productValidators, (req, res, next) => {
 				console.log(
 					'this user does not have permission to edit the product!'
 				);
-				res.json({ success: false });
+				const error = new Error('Not authorized to edit this product');
+				error.status = 401;
+				throw error;
 			}
 		})
 		.catch((err) => {
 			console.log(err);
-			res.sendStatus(400);
+			next(err);
 		});
 });
 
-router.post('/delete-product', (req, res, next) => {
-	const { id } = req.body;
-	Product.findByIdAndRemove(id)
+router.delete('/product/:id', isAuth, (req, res, next) => {
+	const { id } = req.params;
+	Product.findOneAndDelete({ _id: id, userId: req.userId })
 		.then(async (product) => {
-			if (product) {
-				fs.unlink(
-					path.join(appRoot.toString(), product.imageUrl),
-					(err) => {
-						if (err) {
-							throw err;
-						}
+			if (!product) throw new Error('Product does not exist');
+			fs.unlink(
+				path.join(appRoot.toString(), product.imageUrl),
+				(err) => {
+					if (err) {
+						throw err;
 					}
-				);
-			}
+				}
+			);
 			console.log('successful delete!');
 			const users = await User.find({}).exec();
 			users.forEach(async (user) => {
@@ -125,7 +137,7 @@ router.post('/delete-product', (req, res, next) => {
 		})
 		.catch((err) => {
 			console.log(err);
-			res.sendStatus(400);
+			next(err);
 		});
 });
 

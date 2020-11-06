@@ -4,21 +4,18 @@ const User = require('../model/user');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
+const jwt = require('jsonwebtoken');
 const sendGridTransport = require('nodemailer-sendgrid-transport');
 const { body, validationResult } = require('express-validator');
+const ValidationError = require('../errors/ValidationError');
 
 const transporter = nodemailer.createTransport(
 	sendGridTransport({
 		auth: {
-			api_key:
-				'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'
+			api_key: process.env.SENDGRID_API_KEY
 		}
 	})
 );
-
-router.get('/authenticated', (req, res, next) => {
-	res.json({ isAuthenticated: req.session.isLoggedIn });
-});
 
 router.post(
 	'/signup',
@@ -90,11 +87,10 @@ router.post(
 		const errors = validationResult(req);
 		console.log(errors.array());
 		if (!errors.isEmpty()) {
-			return res.json({
-				success: false,
-				message: errors.array()[0].msg,
-				allErrors: errors.array()
-			});
+			throw new ValidationError(
+				'Login input was malformed',
+				errors.array()
+			);
 		}
 		User.findOne({ email: email.toLowerCase() })
 			.then(async (user) => {
@@ -104,44 +100,44 @@ router.post(
 						user.password
 					);
 					if (didMatch) {
-						req.session.isLoggedIn = true;
-						req.session.user = user;
-						console.log(req.session);
-						res.json({ success: true });
-					} else {
+						const token = jwt.sign(
+							{ email: user.email, userId: user._id },
+							'JeanIsMyWaifu',
+							{ expiresIn: '1h' }
+						);
+
 						res.json({
-							success: false,
-							message:
-								'Either the email did not exist or the password was incorrect'
+							token: token,
+							userId: user._id.toString()
 						});
+					} else {
+						const error = new Error(
+							'Either the email did not exist or the password was incorrect'
+						);
+						error.status = 401;
+						throw error;
 					}
 				} else {
-					res.json({
-						success: false,
-						message:
-							'Either the email did not exist or the password was incorrect'
-					});
+					const error = new Error(
+						'Either the email did not exist or the password was incorrect'
+					);
+					error.status = 401;
+					throw error;
 				}
 			})
 			.catch((err) => {
 				console.log(err);
-				res.sendStatus(400);
+				next(err);
 			});
 	}
 );
-
-router.post('/logout', (req, res, next) => {
-	req.session.destroy(() => {
-		res.sendStatus(200);
-	});
-});
 
 router.post('/reset', (req, res, next) => {
 	const email = req.body.email.toLowerCase();
 	crypto.randomBytes(32, (err, buffer) => {
 		if (err) {
 			console.log(err);
-			res.sendStatus(400);
+			throw new Error();
 		}
 		const token = buffer.toString('hex');
 		User.findOne({ email: email })
@@ -168,7 +164,7 @@ router.post('/reset', (req, res, next) => {
 			})
 			.catch((err) => {
 				console.log(err);
-				res.sendStatus(400);
+				next(err);
 			});
 	});
 });
