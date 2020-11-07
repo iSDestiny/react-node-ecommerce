@@ -25,7 +25,8 @@ const productValidators = [
 router.post('/add-product', isAuth, productValidators, (req, res, next) => {
 	const { title, price, description } = req.body;
 	const image = req.file;
-	// console.log(image);
+	console.log('add-product');
+	console.log(image);
 	const errors = validationResult(req);
 
 	if (!errors.isEmpty() || !image) {

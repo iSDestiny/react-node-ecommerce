@@ -1,8 +1,0 @@
-{
-    "env": {
-        "MONGO_USER": "jason",
-        "MONGO_PASSWORD": "matkim525",
-        "MONGO_DEFAULT_DATABASE": "node-course",
-        "SENDGRID_API_KEY": "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"
-    }
-}
